@@ -16,8 +16,8 @@ type dumpCommentsExt struct{}
 
 func New() chamele.Extension { return &dumpCommentsExt{} }
 
-func (e *dumpCommentsExt) Name() string        { return "dumpcomments" }
-func (e *dumpCommentsExt) OrderingIndex() int  { return 1000 }
+func (e *dumpCommentsExt) Name() string                              { return "dumpcomments" }
+func (e *dumpCommentsExt) OrderingIndex() int                        { return 1000 }
 func (e *dumpCommentsExt) FunctionInfoColumns() []chamele.ColumnSpec { return nil }
 
 func (e *dumpCommentsExt) Process(tokens iter.Seq[string], _ *chamele.FileInfoBuilder) iter.Seq[string] {

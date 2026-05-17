@@ -23,7 +23,9 @@ func TestUnit_TTCN_Function(t *testing.T) {
 	got := functions("function foo(in integer a) { }")
 	if len(got) != 1 || got[0].Name != "foo" {
 		names := make([]string, len(got))
-		for i, f := range got { names[i] = f.Name }
+		for i, f := range got {
+			names[i] = f.Name
+		}
 		t.Errorf("got %v", names)
 	}
 }

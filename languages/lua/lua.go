@@ -54,13 +54,13 @@ func (r *LuaReader) RunTokens(tokens iter.Seq[string], ctx languages.Context) {
 // Nesting: do/then/function/repeat all open a block; end closes one.
 
 type luaMachine struct {
-	m             *tokenizer.Machine
-	ctx           languages.Context
-	depth         int    // nesting depth
-	inFunc        bool   // inside a function
-	funcDepth     int    // depth at function entry (for matching end)
-	lastToken     string // most recent non-whitespace token for name resolution
-	pendingName   string // name from LHS of assignment
+	m           *tokenizer.Machine
+	ctx         languages.Context
+	depth       int    // nesting depth
+	inFunc      bool   // inside a function
+	funcDepth   int    // depth at function entry (for matching end)
+	lastToken   string // most recent non-whitespace token for name resolution
+	pendingName string // name from LHS of assignment
 }
 
 func newLuaMachine(ctx languages.Context) *tokenizer.Machine {

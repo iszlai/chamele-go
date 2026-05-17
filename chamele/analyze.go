@@ -3,9 +3,9 @@ package chamele
 import (
 	"runtime"
 
-	"golang.org/x/sync/errgroup"
 	"github.com/iszlai/chamele-go/internal/stringx"
 	"github.com/iszlai/chamele-go/languages"
+	"golang.org/x/sync/errgroup"
 )
 
 // Analyze walks paths, analyses every recognised source file, and returns one
@@ -19,7 +19,6 @@ func Analyze(paths []string, opts ...Option) ([]FileInformation, error) {
 	files := sourceFiles(paths, o)
 	return analyzeFiles(files, o)
 }
-
 
 // AnalyzeFile analyses a single source file.
 func AnalyzeFile(path string, opts ...Option) (*FileInformation, error) {

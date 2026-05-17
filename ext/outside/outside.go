@@ -14,8 +14,8 @@ type outsideExt struct{}
 
 func New() chamele.Extension { return &outsideExt{} }
 
-func (e *outsideExt) Name() string        { return "outside" }
-func (e *outsideExt) OrderingIndex() int  { return 1000 }
+func (e *outsideExt) Name() string                              { return "outside" }
+func (e *outsideExt) OrderingIndex() int                        { return 1000 }
 func (e *outsideExt) FunctionInfoColumns() []chamele.ColumnSpec { return nil }
 
 // Process is a no-op; the *global* function is already tracked internally.

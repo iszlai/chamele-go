@@ -57,7 +57,7 @@ type goMachine struct {
 	m          *tokenizer.Machine
 	ctx        languages.Context
 	braceDepth int
-	funcDepths []int  // depth before each function's `{`; popped on matching `}`
+	funcDepths []int // depth before each function's `{`; popped on matching `}`
 	lastToken  string
 }
 

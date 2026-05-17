@@ -5,9 +5,9 @@ import (
 	"os"
 	"path/filepath"
 
-	gitignore "github.com/sabhiram/go-gitignore"
 	"github.com/iszlai/chamele-go/internal/stringx"
 	"github.com/iszlai/chamele-go/languages"
+	gitignore "github.com/sabhiram/go-gitignore"
 )
 
 // sourceFiles returns all source files under paths that pass the language,

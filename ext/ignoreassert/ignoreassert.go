@@ -13,8 +13,8 @@ type ignoreAssertExt struct{}
 
 func New() chamele.Extension { return &ignoreAssertExt{} }
 
-func (e *ignoreAssertExt) Name() string        { return "ignoreassert" }
-func (e *ignoreAssertExt) OrderingIndex() int  { return 900 }
+func (e *ignoreAssertExt) Name() string                              { return "ignoreassert" }
+func (e *ignoreAssertExt) OrderingIndex() int                        { return 900 }
 func (e *ignoreAssertExt) FunctionInfoColumns() []chamele.ColumnSpec { return nil }
 
 func (e *ignoreAssertExt) Process(tokens iter.Seq[string], ctx *chamele.FileInfoBuilder) iter.Seq[string] {

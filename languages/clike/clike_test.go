@@ -4,9 +4,9 @@ import (
 	"iter"
 	"testing"
 
-	_ "github.com/iszlai/chamele-go/languages/clike"
 	"github.com/iszlai/chamele-go/chamele"
 	"github.com/iszlai/chamele-go/languages/clike"
+	_ "github.com/iszlai/chamele-go/languages/clike"
 )
 
 func functions(src string) []*chamele.FunctionInfo {

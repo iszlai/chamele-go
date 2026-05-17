@@ -135,9 +135,10 @@ func (s *perlMachine) stateVarDecl(tok string) bool {
 }
 
 func (s *perlMachine) stateAfterVar(tok string) bool {
-	if tok == "=" {
+	switch tok {
+	case "=":
 		s.m.Next(s.stateGlobal)
-	} else if tok == ";" || tok == "\n" {
+	case ";", "\n":
 		s.pendingName = ""
 		s.m.Next(s.stateGlobal)
 	}

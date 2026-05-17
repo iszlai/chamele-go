@@ -14,8 +14,8 @@ type modifiedExt struct{}
 
 func New() chamele.Extension { return &modifiedExt{} }
 
-func (e *modifiedExt) Name() string        { return "modified" }
-func (e *modifiedExt) OrderingIndex() int  { return 1000 }
+func (e *modifiedExt) Name() string                              { return "modified" }
+func (e *modifiedExt) OrderingIndex() int                        { return 1000 }
 func (e *modifiedExt) FunctionInfoColumns() []chamele.ColumnSpec { return nil }
 
 // Process runs after the standard ConditionCounter. For each `switch` token

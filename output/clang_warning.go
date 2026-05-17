@@ -11,7 +11,7 @@ import (
 func PrintClangWarnings(w io.Writer, files []chamele.FileInformation, thresholds []chamele.Threshold) int {
 	warnings := chamele.WarningFilter(files, thresholds)
 	for _, fn := range warnings {
-		fmt.Fprintf(w, "%s warning: %s has %d NLOC, %d CCN, %d token, %d PARAM, %d length\n",
+		_, _ = fmt.Fprintf(w, "%s warning: %s has %d NLOC, %d CCN, %d token, %d PARAM, %d length\n",
 			fn.Location(),
 			fn.Name,
 			fn.NLOC,

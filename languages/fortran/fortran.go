@@ -114,9 +114,10 @@ func (s *fortranMachine) stateFunctionName(tok string) bool {
 }
 
 func (s *fortranMachine) stateAfterName(tok string) bool {
-	if tok == "(" {
+	switch tok {
+	case "(":
 		s.m.Next(s.stateParams)
-	} else if tok == "\n" {
+	case "\n":
 		// No params: SUBROUTINE foo
 		s.m.Next(s.stateGlobal)
 	}

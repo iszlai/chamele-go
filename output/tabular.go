@@ -35,7 +35,7 @@ type TabularOptions struct {
 }
 
 func printModules(w io.Writer, files []chamele.FileInformation, scheme *chamele.OutputScheme, verbose bool) []chamele.FileInformation {
-	fmt.Fprintln(w, scheme.FunctionInfoHead())
+	_, _ = fmt.Fprintln(w, scheme.FunctionInfoHead())
 	var saved []chamele.FileInformation
 	for i := range files {
 		fi := &files[i]
@@ -44,16 +44,16 @@ func printModules(w io.Writer, files []chamele.FileInformation, scheme *chamele.
 		}
 		saved = append(saved, *fi)
 		for _, fn := range fi.Functions {
-			fmt.Fprintln(w, scheme.FunctionInfoLine(fn))
+			_, _ = fmt.Fprintln(w, scheme.FunctionInfoLine(fn))
 		}
 	}
-	fmt.Fprintf(w, "%d file analyzed.\n", len(saved))
-	fmt.Fprintln(w, strings.Repeat("=", 62))
-	fmt.Fprintln(w, "NLOC   "+scheme.AverageCaptions()+" function_cnt    file")
-	fmt.Fprintln(w, strings.Repeat("-", 62))
+	_, _ = fmt.Fprintf(w, "%d file analyzed.\n", len(saved))
+	_, _ = fmt.Fprintln(w, strings.Repeat("=", 62))
+	_, _ = fmt.Fprintln(w, "NLOC   "+scheme.AverageCaptions()+" function_cnt    file")
+	_, _ = fmt.Fprintln(w, strings.Repeat("-", 62))
 	for i := range saved {
 		fi := &saved[i]
-		fmt.Fprintf(w, "%7d%s%10d     %s\n",
+		_, _ = fmt.Fprintf(w, "%7d%s%10d     %s\n",
 			fi.NLOC,
 			formatAverages(fi, scheme),
 			len(fi.Functions),
@@ -75,7 +75,7 @@ func printWarnings(w io.Writer, warnings []*chamele.FunctionInfo, scheme *chamel
 			parts[i] = fmt.Sprintf("%s > %d", t.Metric, t.Limit)
 		}
 		msg := "No thresholds exceeded (" + strings.Join(parts, " or ") + ")"
-		fmt.Fprintln(w, "\n"+strings.Repeat("=", len(msg))+"\n"+msg)
+		_, _ = fmt.Fprintln(w, "\n"+strings.Repeat("=", len(msg))+"\n"+msg)
 		return 0, 0
 	}
 	parts := make([]string, len(thresholds))
@@ -83,11 +83,11 @@ func printWarnings(w io.Writer, warnings []*chamele.FunctionInfo, scheme *chamel
 		parts[i] = fmt.Sprintf("%s > %d", t.Metric, t.Limit)
 	}
 	warnStr := "!!!! Warnings (" + strings.Join(parts, " or ") + ") !!!!"
-	fmt.Fprintln(w, "\n"+strings.Repeat("=", len(warnStr))+"\n"+warnStr)
-	fmt.Fprintln(w, scheme.FunctionInfoHead())
+	_, _ = fmt.Fprintln(w, "\n"+strings.Repeat("=", len(warnStr))+"\n"+warnStr)
+	_, _ = fmt.Fprintln(w, scheme.FunctionInfoHead())
 	var warnCount, warnNLOC int
 	for _, fn := range warnings {
-		fmt.Fprintln(w, scheme.FunctionInfoLine(fn))
+		_, _ = fmt.Fprintln(w, scheme.FunctionInfoLine(fn))
 		warnCount++
 		warnNLOC += fn.NLOC
 	}
@@ -99,10 +99,6 @@ func printTotal(w io.Writer, warnCount, warnNLOC int, files []chamele.FileInform
 	totalNLOC := 0
 	for i := range files {
 		totalNLOC += files[i].NLOC
-	}
-	fnCount := len(allFns)
-	if fnCount == 0 {
-		fnCount = 1
 	}
 	nloc := totalNLOC
 	nlocInFns := 0
@@ -123,10 +119,10 @@ func printTotal(w io.Writer, warnCount, warnNLOC int, files []chamele.FileInform
 	avgNLOC /= total
 	avgToken /= total
 
-	fmt.Fprintln(w, strings.Repeat("=", 90))
-	fmt.Fprintln(w, "Total nloc  "+scheme.AverageCaptions()+"  Fun Cnt  Warning cnt   Fun Rt   nloc Rt")
-	fmt.Fprintln(w, strings.Repeat("-", 90))
-	fmt.Fprintf(w, "%10d %8.1f %7.1f %9.1f%9d%13d%10.2f%8.2f\n",
+	_, _ = fmt.Fprintln(w, strings.Repeat("=", 90))
+	_, _ = fmt.Fprintln(w, "Total nloc  "+scheme.AverageCaptions()+"  Fun Cnt  Warning cnt   Fun Rt   nloc Rt")
+	_, _ = fmt.Fprintln(w, strings.Repeat("-", 90))
+	_, _ = fmt.Fprintf(w, "%10d %8.1f %7.1f %9.1f%9d%13d%10.2f%8.2f\n",
 		nloc, avgNLOC, avgCCN, avgToken,
 		len(allFns), warnCount,
 		float64(warnCount)/float64(max(len(allFns), 1)),
@@ -137,9 +133,7 @@ func printTotal(w io.Writer, warnCount, warnNLOC int, files []chamele.FileInform
 func collectFunctions(files []chamele.FileInformation) []*chamele.FunctionInfo {
 	var all []*chamele.FunctionInfo
 	for i := range files {
-		for _, fn := range files[i].Functions {
-			all = append(all, fn)
-		}
+		all = append(all, files[i].Functions...)
 	}
 	return all
 }

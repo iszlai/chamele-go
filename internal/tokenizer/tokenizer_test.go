@@ -95,11 +95,11 @@ func TestUnit_GenerateTokens_DoubleQuotedString(t *testing.T) {
 
 func TestUnit_GenerateTokens_SingleQuotedString(t *testing.T) {
 	// '\'' → one token (escaped quote inside)
-	if got := collect("'\\''"); !slices.Equal(got, []string{"'\\''"}){
+	if got := collect("'\\''"); !slices.Equal(got, []string{"'\\''"}) {
 		t.Errorf("collect(`'\\''`) = %v", got)
 	}
 	// '\\\'  → 5 tokens: each char separately (no valid closing quote found before end)
-	if got := collect(`'\\\`+`'`); !slices.Equal(got, []string{"'", `\`, `\`, `\`, "'"}) {
+	if got := collect(`'\\\` + `'`); !slices.Equal(got, []string{"'", `\`, `\`, `\`, "'"}) {
 		t.Errorf("collect(`'\\\\\\' `) = %v", got)
 	}
 }

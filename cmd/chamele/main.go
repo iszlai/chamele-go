@@ -57,9 +57,9 @@ func rootCmd() *cobra.Command {
 		Long: `chamele measures NLOC, cyclomatic complexity (CCN), token count,
 parameter count and function length for 27+ programming languages
 without needing imports or headers resolved.`,
-		Args:              cobra.ArbitraryArgs,
-		SilenceUsage:      true,
-		SilenceErrors:     true,
+		Args:          cobra.ArbitraryArgs,
+		SilenceUsage:  true,
+		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return run(args, f)
 		},
@@ -139,7 +139,9 @@ func run(args []string, f *cliFlags) error {
 		parts := strings.SplitN(spec, "=", 2)
 		if len(parts) == 2 {
 			var val int
-			fmt.Sscanf(parts[1], "%d", &val)
+			if _, err := fmt.Sscanf(parts[1], "%d", &val); err != nil {
+				continue
+			}
 			thresholds = append(thresholds, chamele.Threshold{Metric: parts[0], Limit: val})
 		}
 	}
@@ -151,7 +153,7 @@ func run(args []string, f *cliFlags) error {
 		if err != nil {
 			return fmt.Errorf("opening output file: %w", err)
 		}
-		defer fh.Close()
+		defer func() { _ = fh.Close() }()
 		out = fh
 		// Infer format from extension if no explicit flag is set.
 		switch {

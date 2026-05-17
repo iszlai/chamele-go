@@ -64,20 +64,20 @@ func buildPattern(addition string) *regexp.Regexp {
 		parts = append(parts, cleaned)
 	}
 	parts = append(parts,
-		`(?:\d+')+\d+`,                      // C++14 digit separators: 1'000'000
+		`(?:\d+')+\d+`,                     // C++14 digit separators: 1'000'000
 		`0x(?:[0-9A-Fa-f]+')+[0-9A-Fa-f]+`, // hex with separators
-		`0b(?:[01]+')+[01]+`,                // binary with separators
-		`\w+`,                               // identifiers and keywords
-		`"(?:\\.|[^"\\])*"`,                 // double-quoted strings
+		`0b(?:[01]+')+[01]+`,               // binary with separators
+		`\w+`,                              // identifiers and keywords
+		`"(?:\\.|[^"\\])*"`,                // double-quoted strings
 		`'(?:\\.|[^'\\])*?'`,               // single-quoted strings
-		`//`+untilEnd,                       // line comments
-		`#`,                                 // macro start (collected below)
-		`:=|::|\*\*`,                        // special operators
-		strings.Join(syms, "|"),             // combined symbols
-		`\\\n`,                              // line continuation (2-char token)
-		`\n`,                                // newline
-		`[^\S\n]+`,                          // horizontal whitespace
-		`.`,                                 // any other single character
+		`//`+untilEnd,                      // line comments
+		`#`,                                // macro start (collected below)
+		`:=|::|\*\*`,                       // special operators
+		strings.Join(syms, "|"),            // combined symbols
+		`\\\n`,                             // line continuation (2-char token)
+		`\n`,                               // newline
+		`[^\S\n]+`,                         // horizontal whitespace
+		`.`,                                // any other single character
 	)
 
 	pattern := prefix + "(?:" + strings.Join(parts, "|") + ")"

@@ -24,9 +24,9 @@ func (r *RubyReader) Tokenize(src []byte) iter.Seq[string] {
 	untilEnd := `(?:\\\n|[^\n])*`
 	return tokenizer.GenerateTokens(src,
 		`|#`+untilEnd+
-			`|\w+[?!]`+   // method names like foo? or bar!
-			`|:\w+`+      // symbols
-			`|\$\w+`+     // global variables
+			`|\w+[?!]`+ // method names like foo? or bar!
+			`|:\w+`+ // symbols
+			`|\$\w+`+ // global variables
 			`|@{0,2}\w+`) // instance/class variables
 }
 
@@ -98,14 +98,15 @@ func (s *rubyMachine) stateGlobal(tok string) bool {
 
 func (s *rubyMachine) stateFunctionName(tok string) bool {
 	defer func() { s.lastToken = tok }()
-	if tok == "(" {
+	switch tok {
+	case "(":
 		// Anonymous function: def (params)
 		s.ctx.PushNewFunction("(anonymous)")
 		s.m.Next(s.stateFunctionParams)
-	} else if tok == "\n" || tok == ";" {
+	case "\n", ";":
 		// def without explicit name — ignore
 		s.m.Next(s.stateGlobal)
-	} else {
+	default:
 		s.ctx.PushNewFunction(tok)
 		s.m.Next(s.stateAfterName)
 	}

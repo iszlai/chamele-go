@@ -11,7 +11,7 @@ import (
 // PrintCSV writes all functions in CSV format, matching lizard's csv_output.
 func PrintCSV(w io.Writer, files []chamele.FileInformation, verbose bool) {
 	if verbose {
-		fmt.Fprintln(w, "NLOC,CCN,token,PARAM,length,location,file,function,long_name,start,end")
+		_, _ = fmt.Fprintln(w, "NLOC,CCN,token,PARAM,length,location,file,function,long_name,start,end")
 	}
 	for i := range files {
 		fi := &files[i]
@@ -21,7 +21,7 @@ func PrintCSV(w io.Writer, files []chamele.FileInformation, verbose bool) {
 		for _, fn := range fi.Functions {
 			loc := fmt.Sprintf("%s@%d-%d@%s",
 				csvEscape(fn.Name), fn.StartLine, fn.EndLine, fi.Filename)
-			fmt.Fprintf(w, "%d,%d,%d,%d,%d,%q,%q,%q,%q,%d,%d\n",
+			_, _ = fmt.Fprintf(w, "%d,%d,%d,%d,%d,%q,%q,%q,%q,%d,%d\n",
 				fn.NLOC,
 				fn.CyclomaticComplexity,
 				fn.TokenCount,

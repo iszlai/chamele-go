@@ -99,10 +99,10 @@ func writeTempFile(content, ext string) (string, error) {
 		return "", err
 	}
 	if _, err := f.WriteString(content); err != nil {
-		f.Close()
+		_ = f.Close()
 		return "", err
 	}
-	f.Close()
+	_ = f.Close()
 	return f.Name(), nil
 }
 

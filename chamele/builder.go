@@ -138,7 +138,7 @@ func (b *FileInfoBuilder) PopNesting() {
 	if item.kind == nkFunction {
 		endLine := b.CurrentFunction.EndLine
 		b.endOfFunction()
-		if last := b.NestingStack.LastFunction(); last != nil {
+		if last := b.LastFunction(); last != nil {
 			b.CurrentFunction = last
 		} else {
 			b.CurrentFunction = b.globalFunction

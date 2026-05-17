@@ -55,10 +55,9 @@ func (r *PLSQLReader) RunTokens(tokens iter.Seq[string], ctx languages.Context) 
 // ---- PL/SQL state machine ----
 
 type plsqlMachine struct {
-	m       *tokenizer.Machine
-	ctx     languages.Context
-	depth   int // BEGIN/END nesting depth
-	inFunc  bool
+	m     *tokenizer.Machine
+	ctx   languages.Context
+	depth int // BEGIN/END nesting depth
 }
 
 func newPLSQLMachine(ctx languages.Context) *tokenizer.Machine {

@@ -15,7 +15,9 @@ func functions(src string) []*chamele.FunctionInfo {
 
 func names(fns []*chamele.FunctionInfo) []string {
 	out := make([]string, len(fns))
-	for i, f := range fns { out[i] = f.Name }
+	for i, f := range fns {
+		out[i] = f.Name
+	}
 	return out
 }
 

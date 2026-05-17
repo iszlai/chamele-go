@@ -24,7 +24,9 @@ func TestUnit_Solidity_SimpleFunction(t *testing.T) {
 	if len(got) != 1 || got[0].Name != "foo" {
 		t.Errorf("got %v", func() []string {
 			n := make([]string, len(got))
-			for i, f := range got { n[i] = f.Name }
+			for i, f := range got {
+				n[i] = f.Name
+			}
 			return n
 		}())
 	}

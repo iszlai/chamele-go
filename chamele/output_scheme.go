@@ -73,7 +73,7 @@ func (s *OutputScheme) FunctionInfoLine(fn *FunctionInfo) string {
 			continue
 		}
 		val := functionFieldStr(fn, item.Value)
-		b.WriteString(fmt.Sprintf("%*s", len(item.Caption), val))
+		fmt.Fprintf(&b, "%*s", len(item.Caption), val)
 	}
 	return b.String()
 }

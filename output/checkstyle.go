@@ -9,8 +9,8 @@ import (
 
 // PrintCheckstyle writes Checkstyle-compatible XML for functions exceeding thresholds.
 func PrintCheckstyle(w io.Writer, files []chamele.FileInformation, thresholds []chamele.Threshold) {
-	fmt.Fprintln(w, `<?xml version="1.0" encoding="UTF-8"?>`)
-	fmt.Fprintln(w, `<checkstyle version="4.3">`)
+	_, _ = fmt.Fprintln(w, `<?xml version="1.0" encoding="UTF-8"?>`)
+	_, _ = fmt.Fprintln(w, `<checkstyle version="4.3">`)
 	for i := range files {
 		fi := &files[i]
 		if fi.IsEmpty() {
@@ -28,12 +28,12 @@ func PrintCheckstyle(w io.Writer, files []chamele.FileInformation, thresholds []
 			}
 		}
 		if len(msgs) > 0 {
-			fmt.Fprintf(w, "<file name=\"%s\">\n", xmlEsc(fi.Filename))
+			_, _ = fmt.Fprintf(w, "<file name=\"%s\">\n", xmlEsc(fi.Filename))
 			for _, m := range msgs {
-				fmt.Fprintln(w, m)
+				_, _ = fmt.Fprintln(w, m)
 			}
-			fmt.Fprintln(w, "</file>")
+			_, _ = fmt.Fprintln(w, "</file>")
 		}
 	}
-	fmt.Fprintln(w, "</checkstyle>")
+	_, _ = fmt.Fprintln(w, "</checkstyle>")
 }

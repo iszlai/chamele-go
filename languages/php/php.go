@@ -43,18 +43,18 @@ func (r *PHPReader) GetConditions() map[string]struct{} {
 func (r *PHPReader) Preprocess(tokens iter.Seq[string], ctx languages.Context) iter.Seq[string] {
 	return func(yield func(string) bool) {
 		inPHP := false
-		prevWasLT := false  // was previous token '<'
-		prevWasQ  := false  // was previous token '?'
+		prevWasLT := false // was previous token '<'
+		prevWasQ := false  // was previous token '?'
 		for tok := range tokens {
 			// Detect the sequence <, ?, php (or just <?) to enter PHP mode.
 			if tok == "<" {
 				prevWasLT = true
-				prevWasQ  = false
+				prevWasQ = false
 				continue
 			}
 			if prevWasLT && tok == "?" {
 				prevWasLT = false
-				prevWasQ  = true
+				prevWasQ = true
 				continue
 			}
 			if prevWasQ {
@@ -115,10 +115,10 @@ func (r *PHPReader) RunTokens(tokens iter.Seq[string], ctx languages.Context) {
 // ---- PHP state machine ----
 
 type phpMachine struct {
-	m          *tokenizer.Machine
-	ctx        languages.Context
-	braceDepth int
-	funcDepths []int
+	m           *tokenizer.Machine
+	ctx         languages.Context
+	braceDepth  int
+	funcDepths  []int
 	pendingName string
 }
 

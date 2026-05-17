@@ -22,12 +22,12 @@ func (r *RReader) LanguageNames() []string { return []string{"r", "R"} }
 
 func (r *RReader) Tokenize(src []byte) iter.Seq[string] {
 	return tokenizer.GenerateTokens(src,
-		`|<-`+     // assignment operator
+		`|<-`+ // assignment operator
 			`|->`+ // right assignment
 			`|%[a-zA-Z_*/>]+%`+ // special operators %in%, %*%
 			`|\.\.\.|`+ // ellipsis
-			`|:::|`+    // internal namespace
-			`|::`)      // namespace
+			`|:::|`+ // internal namespace
+			`|::`) // namespace
 }
 
 func (r *RReader) GetComment(tok string) (string, bool) {
@@ -57,11 +57,11 @@ func (r *RReader) RunTokens(tokens iter.Seq[string], ctx languages.Context) {
 // We track the most recent identifier before <- or = to use as function name.
 
 type rMachine struct {
-	m           *tokenizer.Machine
-	ctx         languages.Context
-	lastIdent   string // last seen identifier (potential function name)
-	braceDepth  int
-	funcDepths  []int
+	m          *tokenizer.Machine
+	ctx        languages.Context
+	lastIdent  string // last seen identifier (potential function name)
+	braceDepth int
+	funcDepths []int
 }
 
 func newRMachine(ctx languages.Context) *tokenizer.Machine {
