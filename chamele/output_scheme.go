@@ -51,6 +51,17 @@ func head(captions string) string {
 	return line + "\n" + captions + "\n" + dash
 }
 
+// AverageCaptions returns the concatenated average column header string.
+func (s *OutputScheme) AverageCaptions() string {
+	var b strings.Builder
+	for _, item := range s.Items {
+		if item.AvgCaption != "" {
+			b.WriteString(item.AvgCaption)
+		}
+	}
+	return b.String()
+}
+
 // FunctionInfoHead returns the header block (=====, captions, -----).
 func (s *OutputScheme) FunctionInfoHead() string { return head(s.Captions()) }
 
