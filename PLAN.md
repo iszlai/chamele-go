@@ -1552,6 +1552,48 @@ translated and green.
 
 ---
 
+---
+
+## Status quo — 2026-05-17
+
+### What is done
+
+- **Phase 0** — bootstrap: go.mod, Makefile, CI/parity workflows, .gitignore, LICENSE, NOTICE, CONTRIBUTING.md, all package skeletons, godog BDD shim.
+- **Phase 1** — tokenizer + state machine + core types: `internal/tokenizer` (GenerateTokens, Machine, helpers), `chamele` (FunctionInfo, FileInformation, NestingStack, FileInfoBuilder), 29 tests green.
+- **Phase 2** — analysis engine: 5 processors (Preprocessing, CommentCounter, LineCounter, TokenCounter, ConditionCounter), FileAnalyzer, Analyze/AnalyzeFile/AnalyzeFiles, walk with nested gitignore + md5 dedup, WarningFilter, WhitelistFilter, OutputScheme.
+- **Phase 3** — C/C++ and Java readers: CLikeReader (3 parallel state machines), JavaReader (depth-tracking, annotation skip, class body nesting). 25 C++ + 10 Java tests green.
+- **Phase 4** — Python, Go, JavaScript: PythonReader (indentation-based), GoReader (brace-depth + funcDepths, IsInsideFunction logic), JSReader (PushNewFunction/EndOfFunction). All pass.
+- **Phase 5** — all 27 language readers registered in `languages/all/all.go`. Readers with tests: C/C++, C#, Erlang, Fortran, GDScript, Go, Java, JS, Kotlin, Lua, ObjC, Perl, PHP, PLSQL, Python, R, Ruby, Rust, Scala, Solidity, ST, Swift, TSX, TTCN-3, TypeScript, Vue, Zig. **21 test packages green.**
+- **Phase 6** — extension framework: updated Extension interface (Process takes ctx), CrossFileExtension, Printer. Implemented: modified, ignoreassert, exitcount, gotocount, statementcount, boolcount, outside, nonstrict, dumpcomments. Stubs (pass-through): cpre, mccabe, ns, nd, duplicate, dupparams, dependencycount, complextags, wordcount, io. All in `ext/all/all.go`.
+- **Phase 7** — CLI + output formats: `cmd/chamele/main.go` with all 25 flags (cobra), tabular/CSV/XML/HTML/Checkstyle/clang/MSVS formatters. `chamele.xsl` vendored locally. Binary builds and produces correct output end-to-end.
+- **Phase 8** — parity test framework: `test/parity/parity_test.go` (build tag `parity`), 19 Perl/Python corpus files in `testdata/`. CCN differences are hard failures; NLOC/token are soft (logged). Perl ternary CCN is marked a known soft divergence. **Passes with `go test -tags parity ./test/parity/...`**
+- **Phase 9** — BDD suite: step definitions (source, analyze, output), feature files: `analyze.feature`, `forgiveness.feature`, `features/languages/go.feature`. 14 scenarios / 64 steps — all green. godog upgraded to v0.15.1.
+- **Phase 10** — `docs/divergences.md` (8 entries), `examples/` (3 programs), version bumped to `v0.1.0`, `.goreleaser.yaml`.
+
+### What is NOT done (open items)
+
+1. **Language test files missing** (9 languages have no `_test.go`): erlang, fortran, gdscript, lua, plsql, r, ruby, st, vue.
+2. **Extension stubs** (5 pass-through with no real logic): `ext/nd`, `ext/ns`, `ext/mccabe`, `ext/duplicate`, `ext/io`.
+3. **BDD feature files missing**: walk_filter, whitelist, output_tabular/csv/xml/html/checkstyle, cli_exit_codes, and one per language (26 missing) and one per extension (19 missing, `features/extensions/` is empty).
+4. **Docs**: `BENCHMARKS.md` and `docs/extending.md` not written.
+5. **CI golangci-lint** — currently failing because golangci-lint v2 `.golangci.yml` schema issues. The valid v2 schema uses `linters.settings` (not `linters-settings`), formatters as a top-level key, and `issues` with changed sub-keys. Next step: look up the exact v2.12 reference schema at https://raw.githubusercontent.com/golangci/golangci-lint/v2.12.2/.golangci.reference.yml and rewrite `.golangci.yml` accordingly, then fix the 20 errcheck/staticcheck/ineffassign/gofmt issues flagged in the last run.
+6. **Lint errors to fix** (from last CI run):
+   - `cmd/chamele/main.go:142` — unchecked `fmt.Sscanf` return
+   - `cmd/chamele/main.go:154` — unchecked `fh.Close()` in defer
+   - `features/steps/source_steps.go:102,105` — unchecked `f.Close()`
+   - `output/checkstyle.go:12,13,31,33` — unchecked `fmt.Fprintln/Fprintf`
+   - `output/clang_warning.go:14` — unchecked `fmt.Fprintf`
+   - `output/csv.go:24` — unchecked `fmt.Fprintf`
+   - `languages/golang/golang.go:60`, `languages/lua/lua.go:57`, `languages/php/php.go:46` — gofmt issues
+   - `output/tabular.go:105` — ineffassign `fnCount`
+   - `output/tabular.go:140` — staticcheck: use `append(all, files[i].Functions...)`
+   - `chamele/builder.go:141` — staticcheck: remove embedded field from selector
+   - `chamele/output_scheme.go:76` — staticcheck: use `fmt.Fprintf` instead of `WriteString(fmt.Sprintf(...))`
+   - `languages/fortran/fortran.go:117`, `languages/perl/perl.go:138`, `languages/ruby/ruby.go:101` — staticcheck: tagged switch
+   - `languages/plsql/plsql.go:61` — unused field `inFunc`
+
+---
+
 ## Quick start for a new contributor
 
 You just got handed this plan. To start:
