@@ -1,6 +1,13 @@
 package chamele
 
-// FunctionInfo holds per-function complexity metrics.
+import (
+	"regexp"
+	"strconv"
+	"strings"
+)
+
+// FunctionInfo holds all per-function complexity metrics collected during analysis.
+// It mirrors Python's FunctionInfo class from lizard.py.
 type FunctionInfo struct {
 	Name                 string
 	LongName             string
@@ -20,48 +27,91 @@ type FunctionInfo struct {
 	Ext                  map[string]any
 }
 
-// Length returns the number of lines in the function (inclusive).
+// NewFunctionInfo creates a FunctionInfo with seed values matching lizard's defaults.
+func NewFunctionInfo(name, filename string, startLine int) *FunctionInfo {
+	return &FunctionInfo{
+		Name:                 name,
+		LongName:             name,
+		Filename:             filename,
+		StartLine:            startLine,
+		EndLine:              startLine,
+		CyclomaticComplexity: 1,
+		NLOC:                 1,
+		TokenCount:           1,
+		TopNestingLevel:      -1,
+	}
+}
+
+// Length returns EndLine - StartLine + 1.
 func (f *FunctionInfo) Length() int { return f.EndLine - f.StartLine + 1 }
 
-// ParameterCount returns the number of parameters, excluding empty entries
-// from trailing commas and stripping type annotations and default values.
-func (f *FunctionInfo) ParameterCount() int {
-	// Implemented in Phase 1.
-	return len(f.FullParameters)
+// Location returns a human-readable position string, matching Python's location property.
+func (f *FunctionInfo) Location() string {
+	return " " + f.Name + "@" +
+		strconv.Itoa(f.StartLine) + "-" +
+		strconv.Itoa(f.EndLine) + "@" +
+		f.Filename
 }
 
-// UnqualifiedName returns the last segment of a "::" separated name.
+// UnqualifiedName returns the last "::" separated segment of the function name.
 func (f *FunctionInfo) UnqualifiedName() string {
-	name := f.Name
-	for i := len(name) - 1; i >= 0; i-- {
-		if i > 0 && name[i-1] == ':' && name[i] == ':' {
-			return name[i+1:]
+	parts := strings.Split(f.Name, "::")
+	return parts[len(parts)-1]
+}
+
+// paramRe extracts the bare parameter name, stripping type annotations (`: …`)
+// and default values (`= …`). Both optional groups require a leading space to
+// avoid false positives on things like "char *p".
+var paramRe = regexp.MustCompile(`(\w+)(\s=.*)?(\s:.*)?$`)
+
+// Parameters returns the bare parameter names, excluding empty entries from
+// trailing commas. Mirrors Python's FunctionInfo.parameters property.
+func (f *FunctionInfo) Parameters() []string {
+	var result []string
+	for _, p := range f.FullParameters {
+		m := paramRe.FindStringSubmatch(p)
+		if m != nil {
+			result = append(result, m[1])
 		}
 	}
-	return name
+	return result
 }
 
-// Location returns a human-readable location string.
-func (f *FunctionInfo) Location() string {
-	return " " + f.Name + "@" + itoa(f.StartLine) + "-" + itoa(f.EndLine) + "@" + f.Filename
+// ParameterCount returns len(Parameters()).
+func (f *FunctionInfo) ParameterCount() int { return len(f.Parameters()) }
+
+// AddToFunctionName appends app to both Name and LongName.
+func (f *FunctionInfo) AddToFunctionName(app string) {
+	f.Name += app
+	f.LongName += app
 }
 
-func itoa(n int) string {
-	if n == 0 {
-		return "0"
+// AddToLongName appends app to LongName, inserting a space when both the
+// current tail and app start with a letter (to keep words readable).
+func (f *FunctionInfo) AddToLongName(app string) {
+	if f.LongName != "" && len(app) > 0 {
+		last := f.LongName[len(f.LongName)-1]
+		if isAlpha(last) && isAlpha(app[0]) {
+			f.LongName += " "
+		}
 	}
-	buf := make([]byte, 0, 10)
-	if n < 0 {
-		buf = append(buf, '-')
-		n = -n
+	f.LongName += app
+}
+
+// AddParameter records one parameter token. A "," starts a new parameter slot;
+// all other tokens are appended (with a space) to the current slot.
+func (f *FunctionInfo) AddParameter(tok string) {
+	f.AddToLongName(" " + tok)
+	switch {
+	case len(f.FullParameters) == 0:
+		f.FullParameters = append(f.FullParameters, tok)
+	case tok == ",":
+		f.FullParameters = append(f.FullParameters, "")
+	default:
+		f.FullParameters[len(f.FullParameters)-1] += " " + tok
 	}
-	digits := make([]byte, 0, 10)
-	for n > 0 {
-		digits = append(digits, byte('0'+n%10))
-		n /= 10
-	}
-	for i := len(digits) - 1; i >= 0; i-- {
-		buf = append(buf, digits[i])
-	}
-	return string(buf)
+}
+
+func isAlpha(b byte) bool {
+	return (b >= 'a' && b <= 'z') || (b >= 'A' && b <= 'Z')
 }
