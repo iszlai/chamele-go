@@ -9,13 +9,14 @@ package chamele
 // mirroring Python's FileInfoBuilder.__getattr__ delegation.
 type FileInfoBuilder struct {
 	*NestingStack
-	fileinfo        FileInformation
-	CurrentLine     int
-	Forgive         bool
-	ForgiveGlobal   bool
-	Newline         bool
-	globalFunction  *FunctionInfo
-	CurrentFunction *FunctionInfo
+	fileinfo         FileInformation
+	CurrentLine      int
+	Forgive          bool
+	ForgiveGlobal    bool
+	Newline          bool
+	IncludeGlobal    bool // set by outside extension
+	globalFunction   *FunctionInfo
+	CurrentFunction  *FunctionInfo
 	stackedFunctions []*FunctionInfo
 }
 
@@ -61,8 +62,13 @@ func (b *FileInfoBuilder) CurrentFunctionLongName() string {
 }
 
 // Build finalises and returns the completed FileInformation.
+// If IncludeGlobal is true (outside extension), the *global* pseudo-function
+// is appended to the function list.
 func (b *FileInfoBuilder) Build() *FileInformation {
 	fi := b.fileinfo
+	if b.IncludeGlobal && b.globalFunction != nil && b.globalFunction.Name != "" {
+		fi.Functions = append([]*FunctionInfo{b.globalFunction}, fi.Functions...)
+	}
 	return &fi
 }
 
