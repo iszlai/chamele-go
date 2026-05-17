@@ -4,6 +4,8 @@ import (
 	"iter"
 	"regexp"
 	"strings"
+
+	"github.com/iszlai/chamele-go/languages"
 )
 
 // Processor is a transform stage in the analysis pipeline. It wraps the
@@ -19,7 +21,7 @@ type commenter interface {
 }
 
 type preprocessor interface {
-	Preprocess(tokens iter.Seq[string]) iter.Seq[string]
+	Preprocess(tokens iter.Seq[string], ctx languages.Context) iter.Seq[string]
 }
 
 type conditionProvider interface {
@@ -30,9 +32,9 @@ type conditionProvider interface {
 
 // Preprocessing strips horizontal whitespace tokens unless the reader has a
 // custom Preprocess method (e.g. for Python indentation tracking).
-func Preprocessing(tokens iter.Seq[string], _ *FileInfoBuilder, reader any) iter.Seq[string] {
+func Preprocessing(tokens iter.Seq[string], ctx *FileInfoBuilder, reader any) iter.Seq[string] {
 	if p, ok := reader.(preprocessor); ok {
-		return p.Preprocess(tokens)
+		return p.Preprocess(tokens, ctx)
 	}
 	return func(yield func(string) bool) {
 		for tok := range tokens {

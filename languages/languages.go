@@ -16,6 +16,33 @@ type Reader interface {
 	Tokenize(src []byte) iter.Seq[string]
 }
 
+// Context is the analysis context passed to language state machines.
+// It is satisfied by *chamele.FileInfoBuilder and defines the subset of
+// FileInfoBuilder methods that language readers may call.
+type Context interface {
+	TryNewFunction(name string)
+	ConfirmNewFunction()
+	RestartNewFunction(name string)
+	PushNewFunction(name string)
+	AddCondition(inc int)
+	AddToFunctionName(app string)
+	AddToLongFunctionName(app string)
+	Parameter(tok string)
+	PopNesting()
+	AddBareNesting()
+	AddNamespace(name string)
+	CurrentNestingLevel() int
+	WithNamespace(name string) string
+	CurrentFunctionLongName() string
+}
+
+// TokenRunner is optionally implemented by readers that drive parallel state
+// machines over the processed token stream. RunTokens is called after all
+// standard processors have run.
+type TokenRunner interface {
+	RunTokens(tokens iter.Seq[string], ctx Context)
+}
+
 var registry []Reader
 
 // Register adds a reader to the global registry. Call from init().

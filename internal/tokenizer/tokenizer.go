@@ -52,6 +52,13 @@ func buildPattern(addition string) *regexp.Regexp {
 		syms[i] = regexp.QuoteMeta(s)
 	}
 
+	// Strip a leading | from the addition: callers often write "|pattern"
+	// to match Python's literal-concatenation style, but buildPattern
+	// assembles parts with Join(parts, "|") so a leading | would produce "||".
+	if len(cleaned) > 0 && cleaned[0] == '|' {
+		cleaned = cleaned[1:]
+	}
+
 	parts := []string{`/\*.*?\*/`} // block comment first
 	if cleaned != "" {
 		parts = append(parts, cleaned)

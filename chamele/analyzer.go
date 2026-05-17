@@ -2,18 +2,11 @@ package chamele
 
 import (
 	"fmt"
-	"iter"
 	"os"
 
 	"github.com/iszlai/chamele-go/internal/stringx"
 	"github.com/iszlai/chamele-go/languages"
 )
-
-// parallelRunner is implemented by language readers that drive parallel state
-// machines over the processed token stream (Phase 3+).
-type parallelRunner interface {
-	RunTokens(tokens iter.Seq[string], ctx *FileInfoBuilder)
-}
 
 // FileAnalyzer runs the processor pipeline over a single source file and
 // returns the resulting FileInformation.
@@ -59,9 +52,9 @@ func (a *FileAnalyzer) AnalyzeSourceCode(filename string, src []byte, r language
 	}
 
 	// Feed processed tokens into the reader's parallel state machines (if any).
-	// For readers that don't implement parallelRunner (Phase 1/2 stubs), just drain.
-	if pr, ok := r.(parallelRunner); ok {
-		pr.RunTokens(tokens, ctx)
+	// For readers that don't implement TokenRunner (Phase 1/2 stubs), just drain.
+	if tr, ok := r.(languages.TokenRunner); ok {
+		tr.RunTokens(tokens, ctx)
 	} else {
 		for range tokens {
 		}

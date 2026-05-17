@@ -26,12 +26,20 @@ type Machine struct {
 	RutTokens []string
 }
 
-// NewMachine creates a machine whose initial state is stateGlobal.
+// NewMachine creates a machine whose initial state is a no-op stateGlobal.
+// Call SetInitialState immediately after to point it at the real global state.
 func NewMachine() *Machine {
 	m := &Machine{}
 	m.state = m.stateGlobal
 	m.savedState = m.stateGlobal
 	return m
+}
+
+// SetInitialState sets the machine's current and saved state. Call this once
+// after creating the machine with the language reader's real stateGlobal method.
+func (m *Machine) SetInitialState(s StateFn) {
+	m.state = s
+	m.savedState = s
 }
 
 func (m *Machine) stateGlobal(_ string) bool { return false }

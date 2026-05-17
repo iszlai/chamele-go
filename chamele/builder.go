@@ -31,6 +31,13 @@ func NewFileInfoBuilder(filename string) *FileInfoBuilder {
 	}
 }
 
+// CurrentFunctionLongName returns the long name of the current function.
+// This is needed by language readers that form function-pointer names from
+// the long name of a preceding declaration.
+func (b *FileInfoBuilder) CurrentFunctionLongName() string {
+	return b.CurrentFunction.LongName
+}
+
 // Build finalises and returns the completed FileInformation.
 func (b *FileInfoBuilder) Build() *FileInformation {
 	fi := b.fileinfo
