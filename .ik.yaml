@@ -1,0 +1,6 @@
+project:
+  slug: iszlaichamele-go
+api:
+  endpoint: https://api.inkode.co
+output:
+  brief_path: .ik/brief.html
