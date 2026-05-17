@@ -1,0 +1,30 @@
+name: Parity
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  parity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install Python lizard
+        run: pip install lizard==1.22.1 pathspec
+      - name: Fetch upstream
+        run: make bootstrap
+      - name: Run parity tests
+        run: go test -tags parity ./test/parity/...
+      - name: Upload CSV diffs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parity-diffs
+          path: test/parity/diffs/

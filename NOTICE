@@ -1,0 +1,8 @@
+chamele-go
+Copyright 2026 Lehel Iszlai and contributors
+
+This product is a derivative work of lizard
+(https://github.com/terryyin/lizard), Copyright Terry Yin and
+contributors, MIT-licensed. The upstream MIT license text is
+included verbatim in lizard-upstream/LICENSE.txt when the upstream
+tree is fetched via scripts/fetch-upstream.sh.

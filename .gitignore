@@ -1,0 +1,4 @@
+/lizard-upstream/
+/bin/
+*.test
+coverage.out
