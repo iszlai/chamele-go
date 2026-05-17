@@ -11,7 +11,7 @@ import (
 // PrintXML writes cppncss-compatible XML output, matching lizard's xml_output.
 func PrintXML(w io.Writer, files []chamele.FileInformation, verbose bool) {
 	fmt.Fprintln(w, `<?xml version="1.0" ?>`)
-	fmt.Fprintln(w, `<?xml-stylesheet type="text/xsl" href="https://raw.githubusercontent.com/terryyin/lizard/master/lizard.xsl"?>`)
+	fmt.Fprintln(w, `<?xml-stylesheet type="text/xsl" href="chamele.xsl"?>`)
 	fmt.Fprintln(w, `<cppncss>`)
 	fmt.Fprintln(w, `  <measure type="Function">`)
 	fmt.Fprintln(w, `    <labels><label>Nr.</label><label>NCSS</label><label>CCN</label></labels>`)
