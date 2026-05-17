@@ -33,9 +33,12 @@ func (r *PerlReader) GetComment(tok string) (string, bool) {
 }
 
 func (r *PerlReader) GetConditions() map[string]struct{} {
+	// Mirror Python PerlReader._control_flow_keywords + _logical_operators + _ternary_operators.
+	// ':' counts as the ternary else (Python _ternary_operators = {'?', ':'}).
 	return map[string]struct{}{
 		"if": {}, "elsif": {}, "unless": {}, "while": {}, "until": {},
-		"for": {}, "foreach": {}, "&&": {}, "||": {}, "?": {},
+		"for": {}, "foreach": {}, "when": {}, "given": {}, "default": {},
+		"do": {}, "&&": {}, "||": {}, "?": {}, ":": {},
 	}
 }
 
