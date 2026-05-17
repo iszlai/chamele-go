@@ -31,6 +31,23 @@ func NewFileInfoBuilder(filename string) *FileInfoBuilder {
 	}
 }
 
+// IsInsideFunction reports whether the top of the stacked-function stack is a
+// real (non-global) function. Mirrors Python's:
+//
+//	len(stacked_functions) > 0 and stacked_functions[-1].name != '*global*'
+func (b *FileInfoBuilder) IsInsideFunction() bool {
+	if len(b.stackedFunctions) == 0 {
+		return false
+	}
+	return b.stackedFunctions[len(b.stackedFunctions)-1].Name != "*global*"
+}
+
+// EndOfFunction finalises the current function and restores the previous one.
+// Called directly by Go-style readers that manage their own nesting.
+func (b *FileInfoBuilder) EndOfFunction() {
+	b.endOfFunction()
+}
+
 // CurrentFunctionLongName returns the long name of the current function.
 // This is needed by language readers that form function-pointer names from
 // the long name of a preceding declaration.

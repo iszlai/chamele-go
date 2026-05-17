@@ -34,6 +34,16 @@ type Context interface {
 	CurrentNestingLevel() int
 	WithNamespace(name string) string
 	CurrentFunctionLongName() string
+	// EndOfFunction finalises the current function and pops stacked_functions.
+	// Called by language readers that manage their own function-body nesting
+	// (e.g. Go) rather than relying on CLikeNestingStackStates.
+	EndOfFunction()
+	// HasStackedFunction reports whether the function stack is non-empty and
+	// the outermost stacked function is a real function (not *global*).
+	// IsInsideFunction reports whether the current scope is inside a real
+	// (non-global) function. Used by the Go reader to distinguish a method
+	// receiver `(recv Type)` from a closure parameter list.
+	IsInsideFunction() bool
 }
 
 // TokenRunner is optionally implemented by readers that drive parallel state
