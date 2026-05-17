@@ -1,0 +1,16 @@
+name: ik
+on: [pull_request, push]
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: iszlai/ik-action@v1
+        with:
+          token: ${{ secrets.IK_TOKEN }}
+          fail-on: new-errors
