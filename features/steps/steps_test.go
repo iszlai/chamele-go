@@ -29,4 +29,7 @@ func InitializeScenario(sc *godog.ScenarioContext) {
 		w.Reset()
 		return context.Background(), nil
 	})
+	registerSourceSteps(sc, w)
+	registerAnalyzeSteps(sc, w)
+	registerOutputSteps(sc, w)
 }

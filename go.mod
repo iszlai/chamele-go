@@ -3,7 +3,7 @@ module github.com/iszlai/chamele-go
 go 1.25.0
 
 require (
-	github.com/cucumber/godog v0.14.1
+	github.com/cucumber/godog v0.15.1
 	github.com/sabhiram/go-gitignore v0.0.0-20210923224102-525f6e181f06
 	golang.org/x/sync v0.20.0
 )
