@@ -44,6 +44,10 @@ type Context interface {
 	// (non-global) function. Used by the Go reader to distinguish a method
 	// receiver `(recv Type)` from a closure parameter list.
 	IsInsideFunction() bool
+	// AddNLOC adjusts the NLOC counters by count (may be negative for docstrings).
+	AddNLOC(count int)
+	// CurrentFunctionName returns the name of the current function (may be "*global*").
+	CurrentFunctionName() string
 }
 
 // TokenRunner is optionally implemented by readers that drive parallel state

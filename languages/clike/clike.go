@@ -34,6 +34,10 @@ const clikeAddition = `` +
 	`|(?:\d*\.\d+(?:[eE][-+]?\d+)?)` +
 	`|(?:\d+\.(?:\d+)?(?:[eE][-+]?\d+)?)`
 
+// CLikeAddition returns the C/C++ specific addition to the base tokenizer pattern.
+// Exported so TypeScript, JavaScript, and other C-like readers can reuse it.
+func CLikeAddition() string { return clikeAddition }
+
 func (r *CLikeReader) Tokenize(src []byte) iter.Seq[string] {
 	return tokenizer.GenerateTokens(src, clikeAddition)
 }

@@ -31,6 +31,11 @@ func NewFileInfoBuilder(filename string) *FileInfoBuilder {
 	}
 }
 
+// CurrentFunctionName returns the name of the current function.
+func (b *FileInfoBuilder) CurrentFunctionName() string {
+	return b.CurrentFunction.Name
+}
+
 // IsInsideFunction reports whether the top of the stacked-function stack is a
 // real (non-global) function. Mirrors Python's:
 //
