@@ -45,8 +45,7 @@ func (r *SolidityReader) RunTokens(tokens iter.Seq[string], ctx languages.Contex
 type solidityMachine struct {
 	m             *tokenizer.Machine
 	ctx           languages.Context
-	braceDepth    int
-	funcDepths    []int
+	brace         tokenizer.BraceTracker
 	pendingName   string
 	pendingParams []string
 	bracketStack  []string
@@ -66,13 +65,9 @@ func (s *solidityMachine) stateGlobal(tok string) bool {
 		s.pendingParams = nil
 		s.m.Next(s.stateFunctionName)
 	case "{":
-		s.braceDepth++
+		s.brace.OnOpen()
 	case "}":
-		s.braceDepth--
-		if len(s.funcDepths) > 0 && s.braceDepth == s.funcDepths[len(s.funcDepths)-1] {
-			s.ctx.EndOfFunction()
-			s.funcDepths = s.funcDepths[:len(s.funcDepths)-1]
-		}
+		s.brace.OnClose(s.ctx.EndOfFunction)
 	}
 	return false
 }
@@ -132,8 +127,7 @@ func (s *solidityMachine) stateEnteringImpl(_ string) bool {
 	}
 	s.pendingParams = nil
 	s.pendingName = ""
-	s.funcDepths = append(s.funcDepths, s.braceDepth)
-	s.braceDepth++
+	s.brace.EnterFunction()
 	s.m.Next(s.stateGlobal)
 	return false
 }

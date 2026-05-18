@@ -54,11 +54,10 @@ func (r *GoReader) RunTokens(tokens iter.Seq[string], ctx languages.Context) {
 // so the matching `}` triggers EndOfFunction().
 
 type goMachine struct {
-	m          *tokenizer.Machine
-	ctx        languages.Context
-	braceDepth int
-	funcDepths []int // depth before each function's `{`; popped on matching `}`
-	lastToken  string
+	m         *tokenizer.Machine
+	ctx       languages.Context
+	brace     tokenizer.BraceTracker
+	lastToken string
 }
 
 func newGoMachine(ctx languages.Context) *tokenizer.Machine {
@@ -77,13 +76,9 @@ func (s *goMachine) stateGlobal(tok string) bool {
 	case "type":
 		s.m.Next(s.stateTypeName)
 	case "{":
-		s.braceDepth++
+		s.brace.OnOpen()
 	case "}":
-		s.braceDepth--
-		if len(s.funcDepths) > 0 && s.braceDepth == s.funcDepths[len(s.funcDepths)-1] {
-			s.ctx.EndOfFunction()
-			s.funcDepths = s.funcDepths[:len(s.funcDepths)-1]
-		}
+		s.brace.OnClose(s.ctx.EndOfFunction)
 	}
 	return false
 }
@@ -165,9 +160,7 @@ func (s *goMachine) stateExpectFunctionImpl(tok string) bool {
 // stateEnteringImpl: `{` confirms the function body.
 func (s *goMachine) stateEnteringImpl(tok string) bool {
 	defer func() { s.lastToken = tok }()
-	// Record current depth BEFORE incrementing (so `}` at that depth closes this function).
-	s.funcDepths = append(s.funcDepths, s.braceDepth)
-	s.braceDepth++
+	s.brace.EnterFunction()
 	s.m.Next(s.stateGlobal)
 	return false
 }

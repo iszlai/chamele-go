@@ -77,8 +77,7 @@ func (r *PerlReader) RunTokens(tokens iter.Seq[string], ctx languages.Context) {
 type perlMachine struct {
 	m           *tokenizer.Machine
 	ctx         languages.Context
-	braceDepth  int
-	funcDepths  []int
+	brace       tokenizer.BraceTracker
 	packageName string
 	pendingName string // variable name from `my $name = sub`
 }
@@ -99,13 +98,9 @@ func (s *perlMachine) stateGlobal(tok string) bool {
 	case "my", "our", "local":
 		s.m.Next(s.stateVarDecl)
 	case "{":
-		s.braceDepth++
+		s.brace.OnOpen()
 	case "}":
-		s.braceDepth--
-		if len(s.funcDepths) > 0 && s.braceDepth == s.funcDepths[len(s.funcDepths)-1] {
-			s.ctx.EndOfFunction()
-			s.funcDepths = s.funcDepths[:len(s.funcDepths)-1]
-		}
+		s.brace.OnClose(s.ctx.EndOfFunction)
 	default:
 		s.pendingName = "" // reset variable name on unrelated tokens
 	}
@@ -190,8 +185,7 @@ func (s *perlMachine) stateSubBody(name string) tokenizer.StateFn {
 
 func (s *perlMachine) confirmFunction(name string) {
 	s.ctx.PushNewFunction(name)
-	s.funcDepths = append(s.funcDepths, s.braceDepth)
-	s.braceDepth++
+	s.brace.EnterFunction()
 	s.m.Next(s.stateGlobal)
 }
 

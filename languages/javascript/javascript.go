@@ -65,8 +65,7 @@ type jsMachine struct {
 	pendingParams []string
 	nameBuilder   strings.Builder
 	dotMode       bool
-	braceDepth    int
-	funcDepths    []int // braceDepth before each function's { (for EndOfFunction)
+	brace         tokenizer.BraceTracker
 }
 
 func newJSMachine(ctx languages.Context) *tokenizer.Machine {
@@ -124,17 +123,13 @@ func (s *jsMachine) stateGlobal(tok string) bool {
 		s.dotMode = true
 
 	case tok == "{":
-		s.braceDepth++
+		s.brace.OnOpen()
 		s.nameBuilder.Reset()
 		s.pendingName = ""
 		s.dotMode = false
 
 	case tok == "}":
-		s.braceDepth--
-		if len(s.funcDepths) > 0 && s.braceDepth == s.funcDepths[len(s.funcDepths)-1] {
-			s.ctx.EndOfFunction()
-			s.funcDepths = s.funcDepths[:len(s.funcDepths)-1]
-		}
+		s.brace.OnClose(s.ctx.EndOfFunction)
 
 	case len(tok) > 0 && (stringx.IsAlpha(tok[0]) || tok[0] == '_' || tok[0] == '$'):
 		if s.dotMode {
@@ -255,8 +250,7 @@ func (s *jsMachine) stateEnteringImp(_ string) bool {
 	}
 	s.pendingParams = nil
 	s.pendingName = ""
-	s.funcDepths = append(s.funcDepths, s.braceDepth)
-	s.braceDepth++
+	s.brace.EnterFunction()
 	s.m.Next(s.stateGlobal)
 	return false
 }
