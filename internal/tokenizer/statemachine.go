@@ -14,16 +14,6 @@ type Machine struct {
 	state      StateFn
 	savedState StateFn
 	callback   func()
-
-	// LastToken is the previous token, readable by state functions.
-	LastToken string
-	// ToExit is set by Return(); the outer loop checks it after each Call.
-	ToExit bool
-
-	// BrCount is used by ReadInsideBracketsThen helpers.
-	BrCount int
-	// RutTokens is the accumulator used by ReadUntilThen helpers.
-	RutTokens []string
 }
 
 // NewMachine creates a machine whose initial state is a no-op stateGlobal.
@@ -45,8 +35,7 @@ func (m *Machine) SetInitialState(s StateFn) {
 func (m *Machine) stateGlobal(_ string) bool { return false }
 
 // Call processes one token through the current state.
-// Returns true if the machine has exited (ToExit is set).
-func (m *Machine) Call(tok string) bool {
+func (m *Machine) Call(tok string) {
 	if m.state(tok) {
 		m.state = m.savedState
 		if m.callback != nil {
@@ -54,39 +43,13 @@ func (m *Machine) Call(tok string) bool {
 			m.callback = nil
 		}
 	}
-	m.LastToken = tok
-	return m.ToExit
 }
 
 // Next sets the current state. If tok is non-empty, it is immediately processed
-// through the new state and the result of Call is returned.
-func (m *Machine) Next(state StateFn, tok ...string) bool {
+// through the new state.
+func (m *Machine) Next(state StateFn, tok ...string) {
 	m.state = state
 	if len(tok) > 0 {
-		return m.Call(tok[0])
-	}
-	return false
-}
-
-// NextIf sets state and processes tok only if tok == expected.
-func (m *Machine) NextIf(state StateFn, tok, expected string) {
-	if tok == expected {
-		m.Next(state, tok)
+		m.Call(tok[0])
 	}
 }
-
-// SubState saves the current state, sets the sub-state, and optionally processes tok.
-func (m *Machine) SubState(state StateFn, callback func(), tok ...string) {
-	m.savedState = m.state
-	m.callback = callback
-	m.Next(state, tok...)
-}
-
-// Return signals that this machine is done; the next Call will return true.
-func (m *Machine) Return() {
-	m.ToExit = true
-}
-
-// StatemachineBeforeReturn is a hook called when the machine is about to return.
-// Embed Machine and override this method to react to end-of-tokens.
-func (m *Machine) StatemachineBeforeReturn() {}

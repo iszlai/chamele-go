@@ -49,7 +49,6 @@ func (r *RReader) RunTokens(tokens iter.Seq[string], ctx languages.Context) {
 	for tok := range tokens {
 		m.Call(tok)
 	}
-	m.StatemachineBeforeReturn()
 }
 
 // ---- R state machine ----
@@ -143,10 +142,6 @@ func (s *rMachine) stateExpectBody(tok string) bool {
 		s.m.Next(s.stateGlobal, tok)
 	}
 	return false
-}
-
-func (s *rMachine) StatemachineBeforeReturn() {
-	// End any open single-line function
 }
 
 func isAlpha(b byte) bool {

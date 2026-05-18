@@ -1,10 +1,9 @@
 package tokenizer
 
 // ReadInsideBracketsThen returns a StateFn that tracks matching brackets with
-// a locally-scoped counter (independent of m.BrCount). When endState is non-nil,
-// body is called for every token including the brackets; otherwise body is called
-// only when the brackets balance (count reaches 0). On balancing, m transitions
-// to endState (if non-nil).
+// a locally-scoped counter. When endState is non-nil, body is called for every
+// token including the brackets; otherwise body is called only when the brackets
+// balance (count reaches 0). On balancing, m transitions to endState (if non-nil).
 //
 // Each call creates a fresh closure with its own counter, so nested uses of
 // ReadInsideBracketsThen are independent.

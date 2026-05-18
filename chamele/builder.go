@@ -13,7 +13,6 @@ type FileInfoBuilder struct {
 	CurrentLine      int
 	Forgive          bool
 	ForgiveGlobal    bool
-	Newline          bool
 	IncludeGlobal    bool // set by outside extension
 	globalFunction   *FunctionInfo
 	CurrentFunction  *FunctionInfo
@@ -28,7 +27,6 @@ func NewFileInfoBuilder(filename string) *FileInfoBuilder {
 		fileinfo:        FileInformation{Filename: filename},
 		globalFunction:  global,
 		CurrentFunction: global,
-		Newline:         true,
 	}
 }
 
@@ -77,7 +75,6 @@ func (b *FileInfoBuilder) AddNLOC(count int) {
 	b.fileinfo.NLOC += count
 	b.CurrentFunction.NLOC += count
 	b.CurrentFunction.EndLine = b.CurrentLine
-	b.Newline = count > 0
 }
 
 // TryNewFunction creates a candidate function at the current line with the

@@ -6,7 +6,6 @@ type FileInformation struct {
 	NLOC       int
 	TokenCount int
 	Functions  []*FunctionInfo
-	WordCount  map[string]int
 }
 
 // IsEmpty reports whether this represents a failed or skipped file.
