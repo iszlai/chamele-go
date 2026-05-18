@@ -47,10 +47,9 @@ func (r *ZigReader) RunTokens(tokens iter.Seq[string], ctx languages.Context) {
 // ---- Zig state machine ----
 
 type zigMachine struct {
-	m          *tokenizer.Machine
-	ctx        languages.Context
-	braceDepth int
-	funcDepths []int
+	m     *tokenizer.Machine
+	ctx   languages.Context
+	brace tokenizer.BraceTracker
 }
 
 func newZigMachine(ctx languages.Context) *tokenizer.Machine {
@@ -66,13 +65,9 @@ func (s *zigMachine) stateGlobal(tok string) bool {
 		s.ctx.PushNewFunction("")
 		s.m.Next(s.stateFunctionName)
 	case "{":
-		s.braceDepth++
+		s.brace.OnOpen()
 	case "}":
-		s.braceDepth--
-		if len(s.funcDepths) > 0 && s.braceDepth == s.funcDepths[len(s.funcDepths)-1] {
-			s.ctx.EndOfFunction()
-			s.funcDepths = s.funcDepths[:len(s.funcDepths)-1]
-		}
+		s.brace.OnClose(s.ctx.EndOfFunction)
 	}
 	return false
 }
@@ -113,8 +108,7 @@ func (s *zigMachine) stateExpectFunctionImpl(tok string) bool {
 }
 
 func (s *zigMachine) stateEnteringImpl(_ string) bool {
-	s.funcDepths = append(s.funcDepths, s.braceDepth)
-	s.braceDepth++
+	s.brace.EnterFunction()
 	s.m.Next(s.stateGlobal)
 	return false
 }

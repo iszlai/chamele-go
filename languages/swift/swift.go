@@ -53,10 +53,9 @@ func (r *SwiftReader) RunTokens(tokens iter.Seq[string], ctx languages.Context) 
 // ---- Swift state machine ----
 
 type swiftMachine struct {
-	m          *tokenizer.Machine
-	ctx        languages.Context
-	braceDepth int
-	funcDepths []int
+	m     *tokenizer.Machine
+	ctx   languages.Context
+	brace tokenizer.BraceTracker
 }
 
 func newSwiftMachine(ctx languages.Context) *tokenizer.Machine {
@@ -80,13 +79,9 @@ func (s *swiftMachine) stateGlobal(tok string) bool {
 		s.ctx.PushNewFunction(tok)
 		s.m.Next(s.stateExpectFunctionImpl)
 	case "{":
-		s.braceDepth++
+		s.brace.OnOpen()
 	case "}":
-		s.braceDepth--
-		if len(s.funcDepths) > 0 && s.braceDepth == s.funcDepths[len(s.funcDepths)-1] {
-			s.ctx.EndOfFunction()
-			s.funcDepths = s.funcDepths[:len(s.funcDepths)-1]
-		}
+		s.brace.OnClose(s.ctx.EndOfFunction)
 	}
 	return false
 }
@@ -132,8 +127,7 @@ func (s *swiftMachine) stateExpectFunctionImpl(tok string) bool {
 }
 
 func (s *swiftMachine) stateEnteringImpl(_ string) bool {
-	s.funcDepths = append(s.funcDepths, s.braceDepth)
-	s.braceDepth++
+	s.brace.EnterFunction()
 	s.m.Next(s.stateGlobal)
 	return false
 }
