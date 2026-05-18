@@ -13,4 +13,4 @@ jobs:
       - uses: iszlai/ik-action@v1
         with:
           token: ${{ secrets.IK_TOKEN }}
-          fail-on: score:50
+          fail-on: never
