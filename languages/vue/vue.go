@@ -5,6 +5,7 @@ import (
 	"iter"
 	"strings"
 
+	"github.com/iszlai/chamele-go/internal/stringx"
 	"github.com/iszlai/chamele-go/languages"
 	"github.com/iszlai/chamele-go/languages/javascript"
 )
@@ -74,7 +75,7 @@ func (r *VueReader) Preprocess(tokens iter.Seq[string], ctx languages.Context) i
 				continue
 			}
 
-			if tok == "\n" || !isHSpace(tok) {
+			if tok == "\n" || !stringx.IsHSpace(tok) {
 				if !yield(tok) {
 					return
 				}
@@ -86,13 +87,4 @@ func (r *VueReader) Preprocess(tokens iter.Seq[string], ctx languages.Context) i
 // RunTokens inherits the JS machine.
 func (r *VueReader) RunTokens(tokens iter.Seq[string], ctx languages.Context) {
 	r.JSReader.RunTokens(tokens, ctx)
-}
-
-func isHSpace(s string) bool {
-	for _, r := range s {
-		if r != ' ' && r != '\t' && r != '\r' {
-			return false
-		}
-	}
-	return len(s) > 0
 }

@@ -11,11 +11,7 @@ import (
 func PrintCheckstyle(w io.Writer, files []chamele.FileInformation, thresholds []chamele.Threshold) {
 	_, _ = fmt.Fprintln(w, `<?xml version="1.0" encoding="UTF-8"?>`)
 	_, _ = fmt.Fprintln(w, `<checkstyle version="4.3">`)
-	for i := range files {
-		fi := &files[i]
-		if fi.IsEmpty() {
-			continue
-		}
+	eachFile(files, func(fi *chamele.FileInformation) {
 		var msgs []string
 		for _, fn := range fi.Functions {
 			for _, t := range thresholds {
@@ -34,6 +30,6 @@ func PrintCheckstyle(w io.Writer, files []chamele.FileInformation, thresholds []
 			}
 			_, _ = fmt.Fprintln(w, "</file>")
 		}
-	}
+	})
 	_, _ = fmt.Fprintln(w, "</checkstyle>")
 }

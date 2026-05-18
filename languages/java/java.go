@@ -4,6 +4,7 @@ package java
 import (
 	"iter"
 
+	"github.com/iszlai/chamele-go/internal/stringx"
 	"github.com/iszlai/chamele-go/internal/tokenizer"
 	"github.com/iszlai/chamele-go/languages"
 	"github.com/iszlai/chamele-go/languages/clike"
@@ -72,7 +73,7 @@ func (s *javaMachine) stateGlobal(tok string) bool {
 		// Skip the class/enum/record header and enter the body via stateClassHeader.
 		// CLikeNestingStackStates handles the namespace push when { is seen.
 		s.m.Next(s.stateClassHeader)
-	case len(tok) > 0 && (isAlpha(tok[0]) || tok[0] == '_'):
+	case len(tok) > 0 && (stringx.IsAlpha(tok[0]) || tok[0] == '_'):
 		// ctx.TryNewFunction uses ctx.WithNamespace which incorporates any
 		// class namespace managed by CLikeNestingStackStates.
 		s.ctx.TryNewFunction(tok)
@@ -83,7 +84,7 @@ func (s *javaMachine) stateGlobal(tok string) bool {
 
 // stateAnnotation: consume the annotation name, then transition.
 func (s *javaMachine) stateAnnotation(tok string) bool {
-	if len(tok) > 0 && (isAlpha(tok[0]) || tok[0] == '_') {
+	if len(tok) > 0 && (stringx.IsAlpha(tok[0]) || tok[0] == '_') {
 		s.m.Next(s.statePostAnnotation)
 		return false
 	}
@@ -175,8 +176,4 @@ func (s *javaMachine) stateEnteringImp(tok string) bool {
 	s.ctx.ConfirmNewFunction()
 	s.m.Next(tokenizer.ReadInsideBracketsThen(s.m, "{", "}", s.stateGlobal, func(_ string) {}), tok)
 	return false
-}
-
-func isAlpha(b byte) bool {
-	return (b >= 'a' && b <= 'z') || (b >= 'A' && b <= 'Z')
 }

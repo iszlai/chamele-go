@@ -4,6 +4,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/iszlai/chamele-go/internal/stringx"
 )
 
 // FunctionInfo holds all per-function complexity metrics collected during analysis.
@@ -91,7 +93,7 @@ func (f *FunctionInfo) AddToFunctionName(app string) {
 func (f *FunctionInfo) AddToLongName(app string) {
 	if f.LongName != "" && len(app) > 0 {
 		last := f.LongName[len(f.LongName)-1]
-		if isAlpha(last) && isAlpha(app[0]) {
+		if stringx.IsAlpha(last) && stringx.IsAlpha(app[0]) {
 			f.LongName += " "
 		}
 	}
@@ -110,8 +112,4 @@ func (f *FunctionInfo) AddParameter(tok string) {
 	default:
 		f.FullParameters[len(f.FullParameters)-1] += " " + tok
 	}
-}
-
-func isAlpha(b byte) bool {
-	return (b >= 'a' && b <= 'z') || (b >= 'A' && b <= 'Z')
 }

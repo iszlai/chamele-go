@@ -5,6 +5,7 @@ import (
 	"iter"
 	"strings"
 
+	"github.com/iszlai/chamele-go/internal/stringx"
 	"github.com/iszlai/chamele-go/internal/tokenizer"
 	"github.com/iszlai/chamele-go/languages"
 )
@@ -62,7 +63,7 @@ func (r *PythonReader) Preprocess(tokens iter.Seq[string], ctx languages.Context
 		for tok := range tokens {
 			if tok != "\n" {
 				if readingLeadingSpace {
-					if isSpace(tok) {
+					if stringx.IsHSpace(tok) {
 						currentSpaces += countSpaces(tok)
 					} else {
 						if !strings.HasPrefix(tok, "#") {
@@ -80,7 +81,7 @@ func (r *PythonReader) Preprocess(tokens iter.Seq[string], ctx languages.Context
 						}
 					}
 				} else {
-					if !isSpace(tok) {
+					if !stringx.IsHSpace(tok) {
 						if !yield(tok) {
 							return
 						}
@@ -170,7 +171,7 @@ func (s *pythonMachine) stateDec(tok string) bool {
 		s.ctx.AddToLongFunctionName(" " + tok)
 		s.m.Next(s.stateAnnotationType)
 	default:
-		if !isSpace(tok) && tok != "\n" {
+		if !stringx.IsHSpace(tok) && tok != "\n" {
 			s.ctx.Parameter(tok)
 		}
 		s.ctx.AddToLongFunctionName(" " + tok)
@@ -209,11 +210,6 @@ func (s *pythonMachine) stateFirstLine(tok string) bool {
 }
 
 // addNLOC is used to adjust NLOC for docstrings. We add this to Context below.
-
-func isSpace(s string) bool {
-	return strings.TrimLeft(s, " \t\r") == "" && len(s) > 0
-}
-
 func countSpaces(tok string) int {
 	n := 0
 	for _, c := range tok {

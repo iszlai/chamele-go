@@ -5,6 +5,7 @@ import (
 	"iter"
 	"strings"
 
+	"github.com/iszlai/chamele-go/internal/stringx"
 	"github.com/iszlai/chamele-go/internal/tokenizer"
 	"github.com/iszlai/chamele-go/languages"
 )
@@ -80,7 +81,7 @@ func (s *plsqlMachine) stateGlobal(tok string) bool {
 }
 
 func (s *plsqlMachine) stateFunctionName(tok string) bool {
-	if isSpace(tok) || tok == "\n" {
+	if stringx.IsHSpace(tok) || tok == "\n" {
 		return false
 	}
 	// Use PushNewFunction so nested procedures stack correctly.
@@ -115,7 +116,7 @@ func (s *plsqlMachine) stateParams(tok string) bool {
 	case ")":
 		s.m.Next(s.stateAfterName)
 	default:
-		if !isSpace(tok) && tok != "\n" {
+		if !stringx.IsHSpace(tok) && tok != "\n" {
 			s.ctx.Parameter(tok) // "," calls AddParameter(",") which starts a new slot
 		}
 	}
@@ -180,8 +181,4 @@ func (s *plsqlMachine) stateAfterEnd(tok string) bool {
 		}
 	}
 	return false
-}
-
-func isSpace(s string) bool {
-	return strings.TrimLeft(s, " \t\r") == "" && len(s) > 0
 }

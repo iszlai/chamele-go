@@ -5,6 +5,7 @@ import (
 	"iter"
 	"strings"
 
+	"github.com/iszlai/chamele-go/internal/stringx"
 	"github.com/iszlai/chamele-go/internal/tokenizer"
 	"github.com/iszlai/chamele-go/languages"
 )
@@ -50,7 +51,7 @@ func (r *GDScriptReader) Preprocess(tokens iter.Seq[string], ctx languages.Conte
 		for tok := range tokens {
 			if tok != "\n" {
 				if readingLeadingSpace {
-					if isSpace(tok) {
+					if stringx.IsHSpace(tok) {
 						currentSpaces += countSpaces(tok)
 					} else {
 						if !strings.HasPrefix(tok, "#") {
@@ -66,7 +67,7 @@ func (r *GDScriptReader) Preprocess(tokens iter.Seq[string], ctx languages.Conte
 						}
 					}
 				} else {
-					if !isSpace(tok) {
+					if !stringx.IsHSpace(tok) {
 						if !yield(tok) {
 							return
 						}
@@ -148,7 +149,7 @@ func (s *gdScriptMachine) stateDec(tok string) bool {
 		s.ctx.AddToLongFunctionName(" )")
 		s.m.Next(s.stateColon)
 	default:
-		if !isSpace(tok) && tok != "\n" {
+		if !stringx.IsHSpace(tok) && tok != "\n" {
 			s.ctx.Parameter(tok)
 		}
 		s.ctx.AddToLongFunctionName(" " + tok)
@@ -165,11 +166,6 @@ func (s *gdScriptMachine) stateColon(tok string) bool {
 	}
 	return false
 }
-
-func isSpace(s string) bool {
-	return strings.TrimLeft(s, " \t\r") == "" && len(s) > 0
-}
-
 func countSpaces(tok string) int {
 	n := 0
 	for _, c := range tok {

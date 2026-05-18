@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/iszlai/chamele-go/internal/stringx"
 	"github.com/iszlai/chamele-go/internal/tokenizer"
 	"github.com/iszlai/chamele-go/languages"
 )
@@ -59,7 +60,7 @@ func (r *CLikeReader) Preprocess(tokens iter.Seq[string], ctx languages.Context)
 				}
 				continue
 			}
-			if isHSpace(tok) {
+			if stringx.IsHSpace(tok) {
 				continue
 			}
 			if tok == "\n" {
@@ -289,7 +290,7 @@ func (s *CLikeStates) TryNewFunction(name string) {
 }
 
 func (s *CLikeStates) stateGlobal(tok string) bool {
-	if len(tok) > 0 && (isAlpha(tok[0]) || tok[0] == '_' || tok[0] == '~') {
+	if len(tok) > 0 && (stringx.IsAlpha(tok[0]) || tok[0] == '_' || tok[0] == '~') {
 		s.TryNewFunction(tok)
 	} else if tok == "[" {
 		s.m.Next(s.stateLambdaCheck)
@@ -396,7 +397,7 @@ func (s *CLikeStates) stateDecToImp(tok string) bool {
 	case "[":
 		s.m.Next(tokenizer.ReadInsideBracketsThen(s.m, "[", "]", s.stateDecToImp, func(_ string) {}), tok)
 	default:
-		if len(tok) > 0 && !isAlpha(tok[0]) && tok[0] != '_' {
+		if len(tok) > 0 && !stringx.IsAlpha(tok[0]) && tok[0] != '_' {
 			s.m.Next(s.stateGlobal, tok)
 		} else {
 			s.m.Next(s.stateOldCParams)
@@ -540,17 +541,4 @@ func (s *CLikeStates) stateLambdaBodySkip(tok string) bool {
 		}
 	}
 	return false
-}
-
-func isAlpha(b byte) bool {
-	return (b >= 'a' && b <= 'z') || (b >= 'A' && b <= 'Z')
-}
-
-func isHSpace(s string) bool {
-	for _, r := range s {
-		if r != ' ' && r != '\t' && r != '\r' {
-			return false
-		}
-	}
-	return len(s) > 0
 }

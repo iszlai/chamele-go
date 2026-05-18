@@ -5,6 +5,7 @@ import (
 	"iter"
 	"strings"
 
+	"github.com/iszlai/chamele-go/internal/stringx"
 	"github.com/iszlai/chamele-go/internal/tokenizer"
 	"github.com/iszlai/chamele-go/languages"
 )
@@ -46,7 +47,7 @@ func (r *PerlReader) GetConditions() map[string]struct{} {
 func (r *PerlReader) Preprocess(tokens iter.Seq[string], _ languages.Context) iter.Seq[string] {
 	return func(yield func(string) bool) {
 		for tok := range tokens {
-			if tok == "\n" || !isHSpace(tok) {
+			if tok == "\n" || !stringx.IsHSpace(tok) {
 				if !yield(tok) {
 					return
 				}
@@ -112,7 +113,7 @@ func (s *perlMachine) stateGlobal(tok string) bool {
 }
 
 func (s *perlMachine) statePackageName(tok string) bool {
-	if !isSpace(tok) && tok != "\n" {
+	if !stringx.IsHSpace(tok) && tok != "\n" {
 		s.packageName = tok
 		s.m.Next(s.stateGlobal)
 	}
@@ -126,7 +127,7 @@ func (s *perlMachine) stateVarDecl(tok string) bool {
 	case "=", ";", "\n":
 		s.m.Next(s.stateGlobal)
 	default:
-		if len(tok) > 0 && (isAlpha(tok[0]) || tok[0] == '_') {
+		if len(tok) > 0 && (stringx.IsAlpha(tok[0]) || tok[0] == '_') {
 			s.pendingName = "$" + tok
 		}
 		s.m.Next(s.stateAfterVar)
@@ -163,7 +164,7 @@ func (s *perlMachine) stateSubName(tok string) bool {
 		// Forward declaration — skip without creating a function.
 		s.m.Next(s.stateGlobal)
 	default:
-		if !isSpace(tok) && tok != "\n" && len(tok) > 0 && (isAlpha(tok[0]) || tok[0] == '_') {
+		if !stringx.IsHSpace(tok) && tok != "\n" && len(tok) > 0 && (stringx.IsAlpha(tok[0]) || tok[0] == '_') {
 			// Named sub.
 			name := s.qualifiedName(tok)
 			s.pendingName = ""
@@ -199,16 +200,4 @@ func (s *perlMachine) qualifiedName(name string) string {
 		return s.packageName + "::" + name
 	}
 	return name
-}
-
-func isAlpha(b byte) bool {
-	return (b >= 'a' && b <= 'z') || (b >= 'A' && b <= 'Z')
-}
-
-func isSpace(s string) bool {
-	return strings.TrimLeft(s, " \t\r") == "" && len(s) > 0
-}
-
-func isHSpace(s string) bool {
-	return strings.TrimLeft(s, " \t\r") == "" && len(s) > 0
 }

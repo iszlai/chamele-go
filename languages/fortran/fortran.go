@@ -5,6 +5,7 @@ import (
 	"iter"
 	"strings"
 
+	"github.com/iszlai/chamele-go/internal/stringx"
 	"github.com/iszlai/chamele-go/internal/tokenizer"
 	"github.com/iszlai/chamele-go/languages"
 )
@@ -193,7 +194,7 @@ func (s *fortranMachine) stateAfterEnd(tok string) bool {
 }
 
 func (s *fortranMachine) stateModuleName(tok string) bool {
-	if tok == "\n" || isSpace(tok) {
+	if tok == "\n" || stringx.IsHSpace(tok) {
 		return false
 	}
 	s.ctx.AddNamespace(tok)
@@ -204,7 +205,7 @@ func (s *fortranMachine) stateModuleName(tok string) bool {
 }
 
 func (s *fortranMachine) stateFunctionName(tok string) bool {
-	if tok == "\n" || isSpace(tok) {
+	if tok == "\n" || stringx.IsHSpace(tok) {
 		return false
 	}
 	s.ctx.RestartNewFunction(tok)
@@ -234,7 +235,7 @@ func (s *fortranMachine) stateParams(tok string) bool {
 	case ",":
 		// separator
 	default:
-		if !isSpace(tok) && tok != "\n" {
+		if !stringx.IsHSpace(tok) && tok != "\n" {
 			s.ctx.Parameter(tok)
 		}
 	}
@@ -250,8 +251,4 @@ func (s *fortranMachine) stateSkipName(tok string) bool {
 		s.m.Next(s.stateGlobal)
 	}
 	return false
-}
-
-func isSpace(s string) bool {
-	return strings.TrimLeft(s, " \t\r") == "" && len(s) > 0
 }

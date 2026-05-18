@@ -1,6 +1,7 @@
 package ttcn
 
 import (
+	"github.com/iszlai/chamele-go/internal/stringx"
 	"github.com/iszlai/chamele-go/internal/tokenizer"
 	"github.com/iszlai/chamele-go/languages"
 )
@@ -31,7 +32,7 @@ func (s *ttcnMachine) stateGlobal(tok string) bool {
 }
 
 func (s *ttcnMachine) stateFunctionName(tok string) bool {
-	if len(tok) > 0 && (isAlpha(tok[0]) || tok[0] == '_') {
+	if len(tok) > 0 && (stringx.IsAlpha(tok[0]) || tok[0] == '_') {
 		s.ctx.AddToFunctionName(tok)
 		s.m.Next(s.stateExpectDec)
 	} else if tok == "(" {
@@ -74,8 +75,4 @@ func (s *ttcnMachine) stateEnteringImp(_ string) bool {
 	s.ctx.ConfirmNewFunction()
 	s.m.Next(tokenizer.ReadInsideBracketsThen(s.m, "{", "}", s.stateGlobal, func(_ string) {}), "{")
 	return false
-}
-
-func isAlpha(b byte) bool {
-	return (b >= 'a' && b <= 'z') || (b >= 'A' && b <= 'Z')
 }
