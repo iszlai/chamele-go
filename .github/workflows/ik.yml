@@ -11,6 +11,7 @@ jobs:
         with:
           fetch-depth: 0
       - uses: iszlai/ik-action@v1
+        continue-on-error: true
         with:
           token: ${{ secrets.IK_TOKEN }}
           fail-on: never
