@@ -1,4 +1,4 @@
-# chamele-go
+# chamele-go [![inkode](https://api.inkode.co/p/iszlaichamele-go/badge.svg)](https://api.inkode.co/p/iszlaichamele-go)
 
 A pure-Go, 1-to-1 feature-complete port of [lizard](https://github.com/terryyin/lizard),
 the extensible cyclomatic complexity analyzer for 27+ programming languages.
