@@ -16,13 +16,11 @@ func init() {
 }
 
 // CLikeReader is the language reader for C and C++.
-type CLikeReader struct {
-	tokenizer.BaseReader
-}
+type CLikeReader struct{}
 
 // NewCLikeReader returns a CLikeReader registered for C/C++ extensions.
 func NewCLikeReader() *CLikeReader {
-	return &CLikeReader{BaseReader: tokenizer.NewBaseReader()}
+	return &CLikeReader{}
 }
 
 func (r *CLikeReader) Extensions() []string    { return []string{"c", "cpp", "cc", "cxx", "h", "hpp"} }
@@ -137,9 +135,6 @@ func RunParallel(
 		for _, m := range machines {
 			m.Call(tok)
 		}
-	}
-	for _, m := range machines {
-		m.StatemachineBeforeReturn()
 	}
 }
 

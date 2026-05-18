@@ -44,11 +44,6 @@ func (n nestingItem) nameInSpace() string {
 	}
 }
 
-// Namespace is a named scope (class, struct, module, package).
-type Namespace struct {
-	Name string
-}
-
 // NestingStack tracks the stack of scopes entered during file analysis.
 // FileInfoBuilder embeds *NestingStack so callers can call these methods directly.
 type NestingStack struct {

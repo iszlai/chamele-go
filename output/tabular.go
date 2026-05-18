@@ -167,10 +167,3 @@ func metricVal(fn *chamele.FunctionInfo, field string) int {
 	}
 	return 0
 }
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
