@@ -153,17 +153,8 @@ func sortWarnings(warnings []*chamele.FunctionInfo, fields []string) []*chamele.
 }
 
 func metricVal(fn *chamele.FunctionInfo, field string) int {
-	switch field {
-	case "cyclomatic_complexity", "ccn":
-		return fn.CyclomaticComplexity
-	case "nloc":
-		return fn.NLOC
-	case "token_count":
-		return fn.TokenCount
-	case "parameter_count":
-		return fn.ParameterCount()
-	case "length":
-		return fn.Length()
+	if m, ok := chamele.MetricByName(field); ok {
+		return m.Get(fn)
 	}
 	return 0
 }

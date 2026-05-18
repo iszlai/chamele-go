@@ -19,7 +19,6 @@ import (
 
 const (
 	keyDepth    = "nd_depth"
-	keyMax      = "max_nesting_depth"
 	keyPrevElse = "nd_prev_else"
 	keyInCond   = "nd_in_cond"
 	keyCondDep  = "nd_cond_depth"
@@ -126,7 +125,6 @@ func (e *ext) Process(tokens iter.Seq[string], ctx *chamele.FileInfoBuilder) ite
 				if d > fn.MaxNestingDepth {
 					fn.MaxNestingDepth = d
 				}
-				ext[keyMax] = fn.MaxNestingDepth
 			}
 
 			if tok == "}" {

@@ -5,11 +5,24 @@ import (
 	"iter"
 )
 
-// ColumnSpec describes an additional output column added by an extension.
+// ColumnSpec describes one output column. It is the single type used by both
+// the built-in tabular formatter and by extensions that add custom columns
+// via FunctionInfoColumns.
+//
+// Header is the (fixed-width, padded) header string for the column. Value is
+// the per-function getter; the return type is `any` so extensions can return
+// strings or numbers without conversion gymnastics. AvgCaption, when
+// non-empty, causes the tabular formatter to include this column in the
+// per-file average row.
 type ColumnSpec struct {
-	Header string
-	Value  func(*FunctionInfo) any
+	Header     string
+	AvgCaption string
+	Value      func(*FunctionInfo) any
 }
+
+// ColumnItem is an alias retained for readability inside output_scheme.go and
+// for callers that grew up with the older name.
+type ColumnItem = ColumnSpec
 
 // Extension is the interface implemented by each optional metric extension.
 // Process is called within the lazy token pipeline — each token passes through
