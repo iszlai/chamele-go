@@ -9,6 +9,7 @@ type World struct {
 	SourceCode  string
 	Lang        string
 	Results     []chamele.FileInformation
+	Rendered    string
 	CLIStdout   string
 	CLIStderr   string
 	CLIExitCode int
