@@ -75,6 +75,20 @@ func newJSMachine(ctx languages.Context) *tokenizer.Machine {
 	return s.m
 }
 
+// jsKeywords are identifiers that are NOT shorthand method names when followed by (.
+var jsKeywords = map[string]bool{
+	"if": true, "else": true, "for": true, "while": true, "switch": true,
+	"catch": true, "try": true, "finally": true, "throw": true, "return": true,
+	"typeof": true, "instanceof": true, "in": true, "of": true,
+	"new": true, "delete": true, "void": true,
+	"var": true, "let": true, "const": true,
+	"class": true, "extends": true, "super": true, "this": true,
+	"import": true, "export": true, "default": true, "from": true,
+	"async": true, "await": true, "yield": true,
+	"static": true, "get": true, "set": true,
+	"do": true, "break": true, "continue": true, "debugger": true,
+}
+
 func (s *jsMachine) stateGlobal(tok string) bool {
 	switch {
 	case tok == "function":
@@ -94,6 +108,16 @@ func (s *jsMachine) stateGlobal(tok string) bool {
 		s.pendingName = s.nameBuilder.String()
 		s.nameBuilder.Reset()
 		s.dotMode = false
+
+	case tok == "(":
+		// Shorthand method: name() { body } — only if name is not a JS keyword.
+		name := s.nameBuilder.String()
+		if name != "" && !jsKeywords[name] {
+			s.pendingName = name
+			s.bracketStack = nil
+			s.m.Next(s.stateDecFn(), tok)
+		}
+		// Don't reset nameBuilder — let default handle it on non-match.
 
 	case tok == ".":
 		s.dotMode = true
@@ -197,9 +221,10 @@ func (s *jsMachine) stateDecToImp(tok string) bool {
 		s.m.Next(s.stateEnteringImp, "{")
 	case "=>":
 		s.m.Next(s.stateArrow)
-	case ";":
+	default:
+		// Not a function body (call, expression, etc.) — abandon and re-process.
 		s.pendingName = ""
-		s.m.Next(s.stateGlobal)
+		s.m.Next(s.stateGlobal, tok)
 	}
 	return false
 }

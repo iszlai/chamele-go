@@ -30,22 +30,50 @@ func (r *VueReader) Tokenize(src []byte) iter.Seq[string] {
 }
 
 // Preprocess filters tokens to only those inside <script> ... </script>.
+// The tokenizer splits HTML tags into separate tokens (<, script, >), so we
+// track tag state explicitly instead of doing a simple string prefix check.
 func (r *VueReader) Preprocess(tokens iter.Seq[string], ctx languages.Context) iter.Seq[string] {
 	return func(yield func(string) bool) {
 		inScript := false
+		inTag := false
+		tagName := ""
+		isCloseTag := false
+
 		for tok := range tokens {
 			lower := strings.ToLower(tok)
-			if strings.HasPrefix(lower, "<script") {
-				inScript = true
+
+			if inTag {
+				if tok == ">" {
+					if tagName == "script" {
+						if isCloseTag {
+							inScript = false
+						} else {
+							inScript = true
+						}
+					}
+					inTag = false
+					tagName = ""
+					isCloseTag = false
+				} else if tok == "/" && tagName == "" {
+					isCloseTag = true
+				} else if tagName == "" && lower != "/" {
+					tagName = lower
+				}
+				// don't yield tag tokens
 				continue
 			}
-			if strings.HasPrefix(lower, "</script") {
-				inScript = false
+
+			if tok == "<" {
+				inTag = true
+				tagName = ""
+				isCloseTag = false
 				continue
 			}
+
 			if !inScript {
 				continue
 			}
+
 			if tok == "\n" || !isHSpace(tok) {
 				if !yield(tok) {
 					return

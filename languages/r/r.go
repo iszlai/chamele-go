@@ -25,8 +25,8 @@ func (r *RReader) Tokenize(src []byte) iter.Seq[string] {
 		`|<-`+ // assignment operator
 			`|->`+ // right assignment
 			`|%[a-zA-Z_*/>]+%`+ // special operators %in%, %*%
-			`|\.\.\.|`+ // ellipsis
-			`|:::|`+ // internal namespace
+			`|\.\.\.`+ // ellipsis
+			`|:::`+ // internal namespace
 			`|::`) // namespace
 }
 
@@ -39,7 +39,7 @@ func (r *RReader) GetComment(tok string) (string, bool) {
 
 func (r *RReader) GetConditions() map[string]struct{} {
 	return map[string]struct{}{
-		"if": {}, "for": {}, "while": {}, "repeat": {},
+		"if": {}, "for": {}, "while": {}, "repeat": {}, "switch": {},
 		"&&": {}, "||": {}, "&": {}, "|": {},
 	}
 }
@@ -136,10 +136,11 @@ func (s *rMachine) stateExpectBody(tok string) bool {
 		s.funcDepths = append(s.funcDepths, s.braceDepth)
 		s.braceDepth++
 		s.m.Next(s.stateGlobal)
-	case "\n":
-		// Single-line function body: name <- function() expr\n
+	default:
+		// Single-line function body (no braces). LineCounter swallows \n so we
+		// end the function when the first body token arrives.
 		s.ctx.EndOfFunction()
-		s.m.Next(s.stateGlobal)
+		s.m.Next(s.stateGlobal, tok)
 	}
 	return false
 }

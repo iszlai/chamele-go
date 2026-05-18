@@ -47,20 +47,17 @@ func (r *LuaReader) RunTokens(tokens iter.Seq[string], ctx languages.Context) {
 }
 
 // ---- Lua state machine ----
-// Lua has two styles:
-//  1. function name() ... end
-//  2. name = function() ... end  (assignment form)
-//
-// Nesting: do/then/function/repeat all open a block; end closes one.
+// Uses a block stack: true = function block, false = regular block (do/then/repeat).
+// 'end' pops the stack and calls EndOfFunction when a function block is popped.
+// LineCounter swallows \n before RunTokens, so \n-based triggers are unreliable;
+// instead, any unexpected token after a function name starts the body.
 
 type luaMachine struct {
 	m           *tokenizer.Machine
 	ctx         languages.Context
-	depth       int    // nesting depth
-	inFunc      bool   // inside a function
-	funcDepth   int    // depth at function entry (for matching end)
-	lastToken   string // most recent non-whitespace token for name resolution
+	blockStack  []bool // true=function, false=regular
 	pendingName string // name from LHS of assignment
+	lastToken   string
 }
 
 func newLuaMachine(ctx languages.Context) *tokenizer.Machine {
@@ -74,19 +71,25 @@ func (s *luaMachine) stateGlobal(tok string) bool {
 	defer func() { s.lastToken = tok }()
 	switch tok {
 	case "function":
-		// Next token may be a name or "(" (anonymous)
 		s.m.Next(s.stateFunctionName)
 	case "=":
-		// Assignment form: name = function ...
 		s.pendingName = s.lastToken
-	case "do", "then", "repeat":
-		s.depth++
+	case "do", "repeat", "if":
+		// 'do' opens for/while/standalone blocks; 'repeat' opens repeat..until;
+		// 'if' opens if..elseif..else..end (elseif/else don't open new blocks).
+		s.blockStack = append(s.blockStack, false)
+	case "until":
+		// Closes a repeat..until block (no 'end' for repeat).
+		if len(s.blockStack) > 0 && !s.blockStack[len(s.blockStack)-1] {
+			s.blockStack = s.blockStack[:len(s.blockStack)-1]
+		}
 	case "end":
-		if s.inFunc && s.depth == s.funcDepth {
-			s.ctx.EndOfFunction()
-			s.inFunc = false
-		} else if s.depth > 0 {
-			s.depth--
+		if len(s.blockStack) > 0 {
+			isFunc := s.blockStack[len(s.blockStack)-1]
+			s.blockStack = s.blockStack[:len(s.blockStack)-1]
+			if isFunc {
+				s.ctx.EndOfFunction()
+			}
 		}
 	}
 	return false
@@ -95,7 +98,7 @@ func (s *luaMachine) stateGlobal(tok string) bool {
 func (s *luaMachine) stateFunctionName(tok string) bool {
 	defer func() { s.lastToken = tok }()
 	if tok == "(" {
-		// Anonymous function or assignment form
+		// Anonymous function or `name = function(` assignment form
 		name := s.pendingName
 		if name == "" {
 			name = "(anonymous)"
@@ -118,9 +121,13 @@ func (s *luaMachine) stateAfterFunctionName(tok string) bool {
 	case "(":
 		s.m.Next(s.stateFunctionParams)
 	case ".", ":":
-		// Method syntax: function obj.method() or function obj:method()
 		s.ctx.AddToFunctionName(tok)
 		s.m.Next(s.stateMethodSuffix)
+	default:
+		// Start function body. LineCounter swallows \n before RunTokens so we
+		// never see the header-ending newline; the first body token arrives here.
+		s.blockStack = append(s.blockStack, true)
+		s.m.Next(s.stateGlobal, tok)
 	}
 	return false
 }
@@ -135,9 +142,7 @@ func (s *luaMachine) stateFunctionParams(tok string) bool {
 	defer func() { s.lastToken = tok }()
 	switch tok {
 	case ")":
-		s.inFunc = true
-		s.funcDepth = s.depth
-		s.depth++
+		s.blockStack = append(s.blockStack, true)
 		s.m.Next(s.stateGlobal)
 	case ",":
 		// separator

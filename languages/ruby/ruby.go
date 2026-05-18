@@ -118,17 +118,16 @@ func (s *rubyMachine) stateAfterName(tok string) bool {
 	switch tok {
 	case "(":
 		s.m.Next(s.stateFunctionParams)
-	case "\n", ";":
-		s.inFunc = true
-		s.depth = 0
-		s.m.Next(s.stateGlobal)
 	case ".":
 		// Class method: def Foo.bar
 		s.ctx.AddToFunctionName(tok)
 		s.m.Next(s.stateMethodSuffix)
 	default:
-		// Some modifier (e.g. `def self.foo`)
-		s.ctx.AddToFunctionName(" " + tok)
+		// Start function body. LineCounter swallows \n before RunTokens, so any
+		// non-syntax token here means the header is over and the body begins.
+		s.inFunc = true
+		s.depth = 0
+		s.m.Next(s.stateGlobal, tok)
 	}
 	return false
 }
