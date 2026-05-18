@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/iszlai/chamele-go/internal/stringx"
 	"github.com/iszlai/chamele-go/languages"
@@ -15,6 +16,12 @@ import (
 //
 // Nested .gitignore files are honoured at every directory level, which is a
 // deliberate divergence from upstream lizard (see docs/divergences.md).
+//
+// Dedup is content-based (MD5 over the file contents), matching upstream
+// lizard. The dedup read is performed by md5File; the analyzer reads the
+// file again to tokenise. F-23 in CLEANUP.md flags this double-read as a
+// perf concern; cache-the-bytes is the right fix but adds memory pressure
+// for large repos so it's deferred.
 func sourceFiles(paths []string, opts Options) []string {
 	seen := make(map[[16]byte]bool)
 	var result []string
@@ -25,19 +32,18 @@ func sourceFiles(paths []string, opts Options) []string {
 			continue
 		}
 		if !fi.IsDir() {
-			if shouldInclude(root, root, opts, seen) {
+			if shouldInclude(root, opts, seen) {
 				result = append(result, root)
 			}
 			continue
 		}
-
-		absRoot, _ := filepath.Abs(root)
 
 		type frame struct {
 			absDir string
 			parser *gitignore.GitIgnore
 		}
 		var ignoreStack []frame
+		absRoot, _ := filepath.Abs(root)
 
 		_ = filepath.WalkDir(root, func(path string, d os.DirEntry, err error) error {
 			if err != nil {
@@ -46,10 +52,13 @@ func sourceFiles(paths []string, opts Options) []string {
 			absPath, _ := filepath.Abs(path)
 
 			if d.IsDir() {
-				// Trim frames no longer on the ancestor path.
+				// Pop frames whose absDir is no longer an ancestor of absPath.
+				// "Ancestor" means absPath == absDir OR absPath starts with
+				// absDir + path-separator. We compare cleaned absolute paths
+				// directly — no Rel() / fragile rel[:2] check.
 				for len(ignoreStack) > 0 {
-					rel, _ := filepath.Rel(ignoreStack[len(ignoreStack)-1].absDir, absPath)
-					if len(rel) >= 2 && rel[:2] == ".." {
+					top := ignoreStack[len(ignoreStack)-1].absDir
+					if absPath != top && !strings.HasPrefix(absPath, top+string(filepath.Separator)) {
 						ignoreStack = ignoreStack[:len(ignoreStack)-1]
 					} else {
 						break
@@ -68,7 +77,7 @@ func sourceFiles(paths []string, opts Options) []string {
 				}
 			}
 
-			if shouldInclude(path, root, opts, seen) {
+			if shouldInclude(path, opts, seen) {
 				result = append(result, path)
 			}
 			return nil
@@ -77,7 +86,7 @@ func sourceFiles(paths []string, opts Options) []string {
 	return result
 }
 
-func shouldInclude(path, _ string, opts Options, seen map[[16]byte]bool) bool {
+func shouldInclude(path string, opts Options, seen map[[16]byte]bool) bool {
 	r := languages.GetReaderForFilename(path)
 	if r == nil {
 		return false
