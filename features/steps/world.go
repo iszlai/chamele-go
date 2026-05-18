@@ -15,9 +15,12 @@ type World struct {
 	CLIExitCode int
 }
 
-// Reset clears all state between scenarios.
+// Reset clears all state between scenarios. Lang is left empty —
+// each scenario must declare a language via a "Given a X file containing:"
+// step before the source is analysed, which avoids silently miscategorising
+// a forgotten language.
 func (w *World) Reset() {
-	*w = World{Lang: "go"}
+	*w = World{}
 }
 
 // AllFunctions returns a flat list of all detected functions.

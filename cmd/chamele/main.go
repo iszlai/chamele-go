@@ -5,6 +5,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"runtime"
@@ -18,8 +19,19 @@ import (
 	"github.com/iszlai/chamele-go/output"
 )
 
+// errWarningGate is returned by run() when the -i (ignore-warnings) gate
+// is exceeded. main() translates it to exit code 1 without printing.
+var errWarningGate = errors.New("warning threshold exceeded")
+
 func main() {
-	if err := rootCmd().Execute(); err != nil {
+	err := rootCmd().Execute()
+	switch {
+	case err == nil:
+		return
+	case errors.Is(err, errWarningGate):
+		os.Exit(1)
+	default:
+		fmt.Fprintln(os.Stderr, "Error:", err)
 		os.Exit(1)
 	}
 }
@@ -195,9 +207,10 @@ func run(args []string, f *cliFlags) error {
 		_ = chamele.RunPrinters(out, exts)
 	}
 
-	// Exit-code gate: -i flag.
+	// Exit-code gate: -i flag. Return a sentinel error rather than calling
+	// os.Exit so test harnesses can intercept it.
 	if f.ignoreWarnings >= 0 && warnCount > f.ignoreWarnings {
-		os.Exit(1)
+		return errWarningGate
 	}
 	return nil
 }
