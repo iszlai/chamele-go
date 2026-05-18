@@ -5,6 +5,7 @@ import (
 	"iter"
 	"strings"
 
+	"github.com/iszlai/chamele-go/internal/stringx"
 	"github.com/iszlai/chamele-go/internal/tokenizer"
 	"github.com/iszlai/chamele-go/languages"
 )
@@ -93,9 +94,9 @@ func (s *rMachine) stateGlobal(tok string) bool {
 			s.funcDepths = s.funcDepths[:len(s.funcDepths)-1]
 		}
 	default:
-		if !isSpace(tok) && tok != "\n" && tok != "#" {
+		if !stringx.IsHSpace(tok) && tok != "\n" && tok != "#" {
 			// Track the last identifier seen
-			if len(tok) > 0 && (isAlpha(tok[0]) || tok[0] == '_' || tok[0] == '.') {
+			if len(tok) > 0 && (stringx.IsAlpha(tok[0]) || tok[0] == '_' || tok[0] == '.') {
 				s.lastIdent = tok
 			} else if tok != "<-" && tok != "=" {
 				s.lastIdent = ""
@@ -121,7 +122,7 @@ func (s *rMachine) stateParams(tok string) bool {
 	case ",":
 		// separator
 	default:
-		if !isSpace(tok) && tok != "\n" {
+		if !stringx.IsHSpace(tok) && tok != "\n" {
 			s.ctx.Parameter(tok)
 			s.ctx.AddToLongFunctionName(" " + tok)
 		}
@@ -142,12 +143,4 @@ func (s *rMachine) stateExpectBody(tok string) bool {
 		s.m.Next(s.stateGlobal, tok)
 	}
 	return false
-}
-
-func isAlpha(b byte) bool {
-	return (b >= 'a' && b <= 'z') || (b >= 'A' && b <= 'Z')
-}
-
-func isSpace(s string) bool {
-	return strings.TrimLeft(s, " \t\r") == "" && len(s) > 0
 }

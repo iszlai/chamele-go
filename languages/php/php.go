@@ -5,6 +5,7 @@ import (
 	"iter"
 	"strings"
 
+	"github.com/iszlai/chamele-go/internal/stringx"
 	"github.com/iszlai/chamele-go/internal/tokenizer"
 	"github.com/iszlai/chamele-go/languages"
 	"github.com/iszlai/chamele-go/languages/clike"
@@ -94,7 +95,7 @@ func (r *PHPReader) Preprocess(tokens iter.Seq[string], ctx languages.Context) i
 				continue
 			}
 			// Strip horizontal whitespace, keep newlines.
-			if tok == "\n" || !isHSpace(tok) {
+			if tok == "\n" || !stringx.IsHSpace(tok) {
 				if !yield(tok) {
 					return
 				}
@@ -154,7 +155,7 @@ func (s *phpMachine) stateFunctionName(tok string) bool {
 		s.ctx.PushNewFunction(s.pendingName)
 		s.pendingName = ""
 		s.m.Next(s.stateFunctionDec(), tok)
-	} else if len(tok) > 0 && (isAlpha(tok[0]) || tok[0] == '_') {
+	} else if len(tok) > 0 && (stringx.IsAlpha(tok[0]) || tok[0] == '_') {
 		s.ctx.PushNewFunction(tok)
 		s.m.Next(s.stateExpectDec)
 	}
@@ -197,17 +198,4 @@ func (s *phpMachine) stateEnteringImpl(_ string) bool {
 	s.braceDepth++
 	s.m.Next(s.stateGlobal)
 	return false
-}
-
-func isAlpha(b byte) bool {
-	return (b >= 'a' && b <= 'z') || (b >= 'A' && b <= 'Z')
-}
-
-func isHSpace(s string) bool {
-	for _, r := range s {
-		if r != ' ' && r != '\t' && r != '\r' {
-			return false
-		}
-	}
-	return len(s) > 0
 }

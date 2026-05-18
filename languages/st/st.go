@@ -5,6 +5,7 @@ import (
 	"iter"
 	"strings"
 
+	"github.com/iszlai/chamele-go/internal/stringx"
 	"github.com/iszlai/chamele-go/internal/tokenizer"
 	"github.com/iszlai/chamele-go/languages"
 )
@@ -50,7 +51,7 @@ func (r *STReader) GetConditions() map[string]struct{} {
 func (r *STReader) Preprocess(tokens iter.Seq[string], ctx languages.Context) iter.Seq[string] {
 	return func(yield func(string) bool) {
 		for tok := range tokens {
-			if tok == "\n" || !isHSpace(tok) {
+			if tok == "\n" || !stringx.IsHSpace(tok) {
 				if !yield(tok) {
 					return
 				}
@@ -106,7 +107,7 @@ func (s *stMachine) stateGlobal(tok string) bool {
 }
 
 func (s *stMachine) stateFunctionName(tok string) bool {
-	if isHSpace(tok) || tok == "\n" {
+	if stringx.IsHSpace(tok) || tok == "\n" {
 		return false
 	}
 	s.ctx.RestartNewFunction(tok)
@@ -114,13 +115,4 @@ func (s *stMachine) stateFunctionName(tok string) bool {
 	s.depth = 0
 	s.m.Next(s.stateGlobal)
 	return false
-}
-
-func isHSpace(s string) bool {
-	for _, r := range s {
-		if r != ' ' && r != '\t' && r != '\r' {
-			return false
-		}
-	}
-	return len(s) > 0
 }

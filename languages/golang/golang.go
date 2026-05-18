@@ -4,8 +4,8 @@ package golang
 
 import (
 	"iter"
-	"strings"
 
+	"github.com/iszlai/chamele-go/internal/stringx"
 	"github.com/iszlai/chamele-go/internal/tokenizer"
 	"github.com/iszlai/chamele-go/languages"
 )
@@ -197,15 +197,11 @@ func (s *goMachine) stateSkipBraceBlock() tokenizer.StateFn {
 func (r *GoReader) Preprocess(tokens iter.Seq[string], ctx languages.Context) iter.Seq[string] {
 	return func(yield func(string) bool) {
 		for tok := range tokens {
-			if tok == "\n" || !isHSpace(tok) {
+			if tok == "\n" || !stringx.IsHSpace(tok) {
 				if !yield(tok) {
 					return
 				}
 			}
 		}
 	}
-}
-
-func isHSpace(s string) bool {
-	return strings.TrimLeft(s, " \t\r") == "" && len(s) > 0
 }

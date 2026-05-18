@@ -5,6 +5,7 @@ import (
 	"iter"
 	"strings"
 
+	"github.com/iszlai/chamele-go/internal/stringx"
 	"github.com/iszlai/chamele-go/internal/tokenizer"
 	"github.com/iszlai/chamele-go/languages"
 )
@@ -148,13 +149,9 @@ func (s *rubyMachine) stateFunctionParams(tok string) bool {
 	case ",":
 		// separator
 	default:
-		if !isSpace(tok) && tok != "\n" {
+		if !stringx.IsHSpace(tok) && tok != "\n" {
 			s.ctx.Parameter(tok)
 		}
 	}
 	return false
-}
-
-func isSpace(s string) bool {
-	return strings.TrimLeft(s, " \t\r") == "" && len(s) > 0
 }

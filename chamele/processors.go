@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/iszlai/chamele-go/internal/stringx"
 	"github.com/iszlai/chamele-go/languages"
 )
 
@@ -38,7 +39,7 @@ func Preprocessing(tokens iter.Seq[string], ctx *FileInfoBuilder, reader any) it
 	}
 	return func(yield func(string) bool) {
 		for tok := range tokens {
-			if tok == "\n" || !isHSpace(tok) {
+			if tok == "\n" || !stringx.IsHSpace(tok) {
 				if !yield(tok) {
 					return
 				}
@@ -162,15 +163,6 @@ var defaultConditions = map[string]struct{}{
 	"&&": {}, "||": {},
 	"case": {},
 	"?":    {},
-}
-
-func isHSpace(s string) bool {
-	for _, r := range s {
-		if r != ' ' && r != '\t' && r != '\r' {
-			return false
-		}
-	}
-	return len(s) > 0
 }
 
 // DefaultProcessors returns the standard pipeline in lizard's defined order.

@@ -5,6 +5,7 @@ import (
 	"iter"
 	"strings"
 
+	"github.com/iszlai/chamele-go/internal/stringx"
 	"github.com/iszlai/chamele-go/internal/tokenizer"
 	"github.com/iszlai/chamele-go/languages"
 	"github.com/iszlai/chamele-go/languages/clike"
@@ -135,7 +136,7 @@ func (s *jsMachine) stateGlobal(tok string) bool {
 			s.funcDepths = s.funcDepths[:len(s.funcDepths)-1]
 		}
 
-	case len(tok) > 0 && (isAlpha(tok[0]) || tok[0] == '_' || tok[0] == '$'):
+	case len(tok) > 0 && (stringx.IsAlpha(tok[0]) || tok[0] == '_' || tok[0] == '$'):
 		if s.dotMode {
 			s.nameBuilder.WriteString("." + tok)
 			s.dotMode = false
@@ -171,7 +172,7 @@ func (s *jsMachine) stateFunctionName(tok string) bool {
 		}
 		s.bracketStack = nil
 		s.m.Next(s.stateDecFn(), tok)
-	case len(tok) > 0 && (isAlpha(tok[0]) || tok[0] == '_'):
+	case len(tok) > 0 && (stringx.IsAlpha(tok[0]) || tok[0] == '_'):
 		// Named function: the name is appended to any pending LHS name.
 		if s.pendingName == "" {
 			s.pendingName = tok
@@ -258,8 +259,4 @@ func (s *jsMachine) stateEnteringImp(_ string) bool {
 	s.braceDepth++
 	s.m.Next(s.stateGlobal)
 	return false
-}
-
-func isAlpha(b byte) bool {
-	return (b >= 'a' && b <= 'z') || (b >= 'A' && b <= 'Z')
 }

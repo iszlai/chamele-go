@@ -17,26 +17,20 @@ func PrintXML(w io.Writer, files []chamele.FileInformation, verbose bool) {
 	_, _ = fmt.Fprintln(w, `    <labels><label>Nr.</label><label>NCSS</label><label>CCN</label></labels>`)
 
 	num, totalNCSS, totalCCN := 0, 0, 0
-	for i := range files {
-		fi := &files[i]
-		if fi.IsEmpty() {
-			continue
+	eachFunction(files, func(fi *chamele.FileInformation, fn *chamele.FunctionInfo) {
+		num++
+		totalNCSS += fn.NLOC
+		totalCCN += fn.CyclomaticComplexity
+		name := fn.Name
+		if verbose {
+			name = fn.LongName
 		}
-		for _, fn := range fi.Functions {
-			num++
-			totalNCSS += fn.NLOC
-			totalCCN += fn.CyclomaticComplexity
-			name := fn.Name
-			if verbose {
-				name = fn.LongName
-			}
-			label := xmlEsc(fmt.Sprintf("%s at line %d-%d@%s", name, fn.StartLine, fn.EndLine, fi.Filename))
-			_, _ = fmt.Fprintf(w, "    <item name=\"%s\">\n", label)
-			_, _ = fmt.Fprintf(w, "      <value>%d</value><value>%d</value><value>%d</value>\n",
-				num, fn.NLOC, fn.CyclomaticComplexity)
-			_, _ = fmt.Fprintln(w, "    </item>")
-		}
-	}
+		label := xmlEsc(fmt.Sprintf("%s at line %d-%d@%s", name, fn.StartLine, fn.EndLine, fi.Filename))
+		_, _ = fmt.Fprintf(w, "    <item name=\"%s\">\n", label)
+		_, _ = fmt.Fprintf(w, "      <value>%d</value><value>%d</value><value>%d</value>\n",
+			num, fn.NLOC, fn.CyclomaticComplexity)
+		_, _ = fmt.Fprintln(w, "    </item>")
+	})
 	if num > 0 {
 		_, _ = fmt.Fprintf(w, "    <average label=\"NCSS\" value=\"%.2f\"/>\n", float64(totalNCSS)/float64(num))
 		_, _ = fmt.Fprintf(w, "    <average label=\"CCN\" value=\"%.2f\"/>\n", float64(totalCCN)/float64(num))
@@ -46,11 +40,7 @@ func PrintXML(w io.Writer, files []chamele.FileInformation, verbose bool) {
 	_, _ = fmt.Fprintln(w, `  <measure type="File">`)
 	_, _ = fmt.Fprintln(w, `    <labels><label>Nr.</label><label>NCSS</label><label>CCN</label><label>Functions</label></labels>`)
 	allFns, allNLOC, allCCN, fcount := 0, 0, 0, 0
-	for i := range files {
-		fi := &files[i]
-		if fi.IsEmpty() {
-			continue
-		}
+	eachFile(files, func(fi *chamele.FileInformation) {
 		fcount++
 		fileCCN := 0
 		for _, fn := range fi.Functions {
@@ -63,7 +53,7 @@ func PrintXML(w io.Writer, files []chamele.FileInformation, verbose bool) {
 		_, _ = fmt.Fprintf(w, "      <value>%d</value><value>%d</value><value>%d</value><value>%d</value>\n",
 			fcount, fi.NLOC, fileCCN, len(fi.Functions))
 		_, _ = fmt.Fprintln(w, "    </item>")
-	}
+	})
 	denom := max(fcount, 1)
 	_, _ = fmt.Fprintf(w, "    <average label=\"NCSS\" value=\"%.2f\"/>\n", float64(allNLOC)/float64(denom))
 	_, _ = fmt.Fprintf(w, "    <average label=\"CCN\" value=\"%.2f\"/>\n", float64(allCCN)/float64(denom))
