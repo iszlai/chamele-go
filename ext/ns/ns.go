@@ -38,14 +38,7 @@ func (e *ext) OrderingIndex() int { return 1000 }
 func (e *ext) FunctionInfoColumns() []chamele.ColumnSpec {
 	return []chamele.ColumnSpec{{
 		Header: "  NS  ",
-		Value: func(f *chamele.FunctionInfo) any {
-			if f.Ext != nil {
-				if v, ok := f.Ext[Key]; ok {
-					return v
-				}
-			}
-			return 0
-		},
+		Value:  func(f *chamele.FunctionInfo) any { return f.GetInt(Key) },
 	}}
 }
 
@@ -79,11 +72,10 @@ func (e *ext) Process(tokens iter.Seq[string], ctx *chamele.FileInfoBuilder) ite
 	pileUp := func(fn *chamele.FunctionInfo) {
 		piles[len(piles)-1]++
 		cur := sum()
-		if fn.Ext == nil {
-			fn.Ext = make(map[string]any)
-		}
-		prev, _ := fn.Ext[Key].(int)
-		if cur > prev {
+		if cur > fn.GetInt(Key) {
+			if fn.Ext == nil {
+				fn.Ext = make(map[string]any)
+			}
 			fn.Ext[Key] = cur
 		}
 	}
@@ -108,12 +100,6 @@ func (e *ext) Process(tokens iter.Seq[string], ctx *chamele.FileInfoBuilder) ite
 	return func(yield func(string) bool) {
 		for tok := range tokens {
 			fn := ctx.CurrentFunction
-			if fn.Ext == nil {
-				fn.Ext = make(map[string]any)
-			}
-			if _, ok := fn.Ext[Key]; !ok {
-				fn.Ext[Key] = 0
-			}
 
 			switch st {
 			case stateGlobal:

@@ -30,12 +30,12 @@ const (
 	linesKey  = "duplicate_lines"
 )
 
-func init() { chamele.RegisterExtension(New()) }
+func init() { chamele.RegisterExtensionFactory(New) }
 
-// New returns the duplicate extension instance.
-func New() chamele.Extension { return ext }
-
-var ext = &dupExt{}
+// New returns a fresh duplicate extension instance. A fresh instance is
+// needed per Analyze run because duplicate accumulates cross-file token
+// windows for its summary output.
+func New() chamele.Extension { return &dupExt{} }
 
 type dupExt struct {
 	dups               []dupBlock

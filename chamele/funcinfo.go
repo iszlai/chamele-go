@@ -100,6 +100,29 @@ func (f *FunctionInfo) AddToLongName(app string) {
 	f.LongName += app
 }
 
+// GetInt returns the int value at key in f.Ext, or 0 if missing or non-int.
+func (f *FunctionInfo) GetInt(key string) int {
+	if f.Ext == nil {
+		return 0
+	}
+	if v, ok := f.Ext[key]; ok {
+		if i, ok := v.(int); ok {
+			return i
+		}
+	}
+	return 0
+}
+
+// Inc increments the int value at key in f.Ext by delta, creating the entry
+// (and the Ext map) if needed.
+func (f *FunctionInfo) Inc(key string, delta int) {
+	if f.Ext == nil {
+		f.Ext = make(map[string]any)
+	}
+	cur, _ := f.Ext[key].(int)
+	f.Ext[key] = cur + delta
+}
+
 // AddParameter records one parameter token. A "," starts a new parameter slot;
 // all other tokens are appended (with a space) to the current slot.
 func (f *FunctionInfo) AddParameter(tok string) {

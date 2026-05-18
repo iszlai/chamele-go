@@ -47,10 +47,10 @@ func (a *FileAnalyzer) AnalyzeSourceCode(filename string, src []byte, r language
 	ctx := NewFileInfoBuilder(filename)
 	tokens := r.Tokenize(src)
 
-	// Split extensions by ordering index: negative → before built-ins, 0+ → after.
+	// Split extensions by phase.
 	var pre, post []Extension
 	for _, e := range a.exts {
-		if e.OrderingIndex() < 0 {
+		if ExtensionPhase(e) == PhasePreBuiltins {
 			pre = append(pre, e)
 		} else {
 			post = append(post, e)

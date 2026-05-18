@@ -9,7 +9,7 @@ import (
 	"github.com/iszlai/chamele-go/chamele"
 )
 
-func init() { chamele.RegisterExtension(New()) }
+func init() { chamele.RegisterExtensionFactory(New) }
 
 type boolCountExt struct {
 	totalBool  int

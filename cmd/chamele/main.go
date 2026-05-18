@@ -125,7 +125,7 @@ func run(args []string, f *cliFlags) error {
 	}
 
 	// Run analysis.
-	files, err := chamele.Analyze(paths, opts...)
+	files, exts, err := chamele.AnalyzeWithExtensions(paths, opts...)
 	if err != nil {
 		return err
 	}
@@ -189,6 +189,12 @@ func run(args []string, f *cliFlags) error {
 			Whitelist:  f.whitelist,
 			Verbose:    f.verbose,
 		})
+	}
+
+	// Per-extension summaries (boolcount rate, duplicate-block listing, …).
+	// Skipped for machine-readable formats so we don't pollute their syntax.
+	if !f.xmlOut && !f.csvOut && !f.htmlOut && !f.checkstyle {
+		_ = chamele.RunPrinters(out, exts)
 	}
 
 	// Exit-code gate: -i flag.

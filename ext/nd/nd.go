@@ -44,22 +44,8 @@ func (e *ext) OrderingIndex() int { return 1000 }
 func (e *ext) FunctionInfoColumns() []chamele.ColumnSpec {
 	return []chamele.ColumnSpec{{
 		Header: "  ND  ",
-		Value: func(f *chamele.FunctionInfo) any {
-			if f.MaxNestingDepth > 0 {
-				return f.MaxNestingDepth
-			}
-			return 0
-		},
+		Value:  func(f *chamele.FunctionInfo) any { return f.MaxNestingDepth },
 	}}
-}
-
-func getInt(m map[string]any, k string) int {
-	if v, ok := m[k]; ok {
-		if i, ok := v.(int); ok {
-			return i
-		}
-	}
-	return 0
 }
 
 func getBool(m map[string]any, k string) bool {
@@ -87,10 +73,10 @@ func (e *ext) Process(tokens iter.Seq[string], ctx *chamele.FileInfoBuilder) ite
 				ext[keyPrevElse] = false
 			case "(":
 				ext[keyInCond] = true
-				ext[keyCondDep] = getInt(ext, keyCondDep) + 1
+				fn.Inc(keyCondDep, 1)
 				ext[keyLogAdded] = false
 			case ")":
-				cd := getInt(ext, keyCondDep) - 1
+				cd := fn.GetInt(keyCondDep) - 1
 				if cd < 0 {
 					cd = 0
 				}
@@ -120,7 +106,7 @@ func (e *ext) Process(tokens iter.Seq[string], ctx *chamele.FileInfoBuilder) ite
 			}
 
 			if isLoop {
-				d := getInt(ext, keyDepth) + 1
+				d := fn.GetInt(keyDepth) + 1
 				ext[keyDepth] = d
 				if d > fn.MaxNestingDepth {
 					fn.MaxNestingDepth = d
@@ -128,7 +114,7 @@ func (e *ext) Process(tokens iter.Seq[string], ctx *chamele.FileInfoBuilder) ite
 			}
 
 			if tok == "}" {
-				d := getInt(ext, keyDepth) - 1
+				d := fn.GetInt(keyDepth) - 1
 				if d < 0 {
 					d = 0
 				}

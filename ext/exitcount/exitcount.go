@@ -22,34 +22,19 @@ func (e *exitCountExt) FunctionInfoColumns() []chamele.ColumnSpec {
 	return []chamele.ColumnSpec{{
 		Header: "exits",
 		Value: func(f *chamele.FunctionInfo) any {
-			if f.Ext != nil {
-				if v, ok := f.Ext[key]; ok {
-					return v
-				}
+			if v := f.GetInt(key); v > 0 {
+				return v
 			}
-			return 0
+			return 1
 		},
 	}}
 }
 
 func (e *exitCountExt) Process(tokens iter.Seq[string], ctx *chamele.FileInfoBuilder) iter.Seq[string] {
-	firstReturn := false
 	return func(yield func(string) bool) {
 		for tok := range tokens {
-			fn := ctx.CurrentFunction
-			if fn.Ext == nil {
-				fn.Ext = make(map[string]any)
-			}
-			if _, ok := fn.Ext[key]; !ok {
-				fn.Ext[key] = 1
-				firstReturn = true
-			}
 			if tok == "return" || tok == "exit" {
-				if firstReturn {
-					firstReturn = false
-				} else {
-					fn.Ext[key] = fn.Ext[key].(int) + 1
-				}
+				ctx.CurrentFunction.Inc(key, 1)
 			}
 			if !yield(tok) {
 				return
