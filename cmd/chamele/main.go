@@ -112,16 +112,14 @@ func run(args []string, f *cliFlags) error {
 		paths = []string{"."}
 	}
 
-	// Build options.
+	// Build options. The whitelist is an output-stage concern and is passed
+	// directly to TabularOptions further down.
 	opts := []chamele.Option{
 		chamele.WithThreads(f.threads),
 		chamele.WithExclude(f.exclude...),
 	}
 	if len(f.languages) > 0 {
 		opts = append(opts, chamele.WithLanguages(f.languages...))
-	}
-	if f.whitelist != "" {
-		opts = append(opts, chamele.WithWhitelist(f.whitelist))
 	}
 
 	// Run analysis.
