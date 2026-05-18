@@ -42,19 +42,8 @@ func violatedThresholds(fn *FunctionInfo, thresholds []Threshold) []string {
 }
 
 func metricValue(fn *FunctionInfo, metric string) int {
-	switch metric {
-	case "cyclomatic_complexity", "ccn":
-		return fn.CyclomaticComplexity
-	case "nloc":
-		return fn.NLOC
-	case "token_count":
-		return fn.TokenCount
-	case "parameter_count":
-		return fn.ParameterCount()
-	case "length":
-		return fn.Length()
-	case "max_nesting_depth", "nd":
-		return fn.MaxNestingDepth
+	if m, ok := MetricByName(metric); ok {
+		return m.Get(fn)
 	}
 	return 0
 }
