@@ -21,29 +21,15 @@ func (e *gotoCountExt) OrderingIndex() int { return 1000 }
 func (e *gotoCountExt) FunctionInfoColumns() []chamele.ColumnSpec {
 	return []chamele.ColumnSpec{{
 		Header: "goto's",
-		Value: func(f *chamele.FunctionInfo) any {
-			if f.Ext != nil {
-				if v, ok := f.Ext[key]; ok {
-					return v
-				}
-			}
-			return 0
-		},
+		Value:  func(f *chamele.FunctionInfo) any { return f.GetInt(key) },
 	}}
 }
 
 func (e *gotoCountExt) Process(tokens iter.Seq[string], ctx *chamele.FileInfoBuilder) iter.Seq[string] {
 	return func(yield func(string) bool) {
 		for tok := range tokens {
-			fn := ctx.CurrentFunction
-			if fn.Ext == nil {
-				fn.Ext = make(map[string]any)
-			}
-			if _, ok := fn.Ext[key]; !ok {
-				fn.Ext[key] = 0
-			}
 			if tok == "goto" {
-				fn.Ext[key] = fn.Ext[key].(int) + 1
+				ctx.CurrentFunction.Inc(key, 1)
 			}
 			if !yield(tok) {
 				return

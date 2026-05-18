@@ -15,9 +15,20 @@ import (
 // Results are returned in a stable order (by file path) regardless of the
 // number of worker goroutines used.
 func Analyze(paths []string, opts ...Option) ([]FileInformation, error) {
+	files, _, err := AnalyzeWithExtensions(paths, opts...)
+	return files, err
+}
+
+// AnalyzeWithExtensions is Analyze that also returns the per-run extension
+// instances. Use the returned slice with RunPrinters to emit per-extension
+// summaries (e.g. duplicate-block listings, bool-count rate) at the end of
+// your output.
+func AnalyzeWithExtensions(paths []string, opts ...Option) ([]FileInformation, []Extension, error) {
 	o := applyOptions(opts)
 	files := sourceFiles(paths, o)
-	return analyzeFiles(files, o)
+	exts := NewRegisteredExtensions()
+	results, err := analyzeFiles(files, o, exts)
+	return results, exts, err
 }
 
 // AnalyzeFile analyses a single source file.
@@ -39,12 +50,15 @@ func AnalyzeFile(path string, opts ...Option) (*FileInformation, error) {
 // AnalyzeFiles analyses the given list of file paths.
 func AnalyzeFiles(paths []string, opts ...Option) ([]FileInformation, error) {
 	o := applyOptions(opts)
-	return analyzeFiles(paths, o)
+	exts := NewRegisteredExtensions()
+	return analyzeFiles(paths, o, exts)
 }
 
 // analyzeFiles runs the FileAnalyzer over each path using a worker pool.
-// The default pool size is runtime.NumCPU().
-func analyzeFiles(paths []string, opts Options) ([]FileInformation, error) {
+// The default pool size is runtime.NumCPU(). All workers share the same
+// extension slice so per-run state (e.g. duplicate detection accumulators,
+// cross-file fan-in maps) sees every file from the same instance.
+func analyzeFiles(paths []string, opts Options, exts []Extension) ([]FileInformation, error) {
 	if len(paths) == 0 {
 		return nil, nil
 	}
@@ -61,7 +75,7 @@ func analyzeFiles(paths []string, opts Options) ([]FileInformation, error) {
 	}
 	close(jobs)
 
-	analyzer := NewFileAnalyzer()
+	analyzer := NewFileAnalyzerWithExts(exts)
 	var g errgroup.Group
 	workers := threads
 	if workers > len(paths) {
@@ -80,10 +94,11 @@ func analyzeFiles(paths []string, opts Options) ([]FileInformation, error) {
 		return nil, err
 	}
 
-	// Cross-file extensions (fan-in/fan-out, duplicate detection) run
-	// after every file has been analysed, on the main goroutine, so they
-	// see deterministic order.
-	for _, ext := range RegisteredExtensions() {
+	// Cross-file extensions (fan-in/fan-out, duplicate detection) run after
+	// every file has been analysed, on the main goroutine, so they see
+	// deterministic order. They use the same instances that ran Process so
+	// any accumulators they built during the per-file pass are visible.
+	for _, ext := range exts {
 		if cfe, ok := ext.(CrossFileExtension); ok {
 			results = cfe.CrossFileProcess(results)
 		}
