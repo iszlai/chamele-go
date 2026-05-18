@@ -3,8 +3,11 @@
 A pure-Go, 1-to-1 feature-complete port of [lizard](https://github.com/terryyin/lizard),
 the extensible cyclomatic complexity analyzer for 27+ programming languages.
 
-> Status: **planning**. See [`PLAN.md`](./PLAN.md) for the full porting plan
-> a junior engineer or coding agent can pick up.
+> Status: **porting complete, cleanup in flight**.
+> - [`PLAN.md`](./PLAN.md) — original porting plan (27 languages, 19
+>   extensions, 7 output formats — all landed).
+> - [`CLEANUP.md`](./CLEANUP.md) — phased refactor plan to drop duplication,
+>   remove dead code, and finish the idiomatic-Go pass. Pick any phase.
 
 ## What lizard does
 
