@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/iszlai/chamele-go/chamele"
+	_ "github.com/iszlai/chamele-go/ext/all"
 	_ "github.com/iszlai/chamele-go/languages/all"
 	"github.com/iszlai/chamele-go/output"
 )

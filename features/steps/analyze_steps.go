@@ -24,6 +24,15 @@ func registerAnalyzeSteps(sc *godog.ScenarioContext, w *World) {
 		return nil
 	})
 
+	sc.Step(`^I analyze the directory$`, func() error {
+		files, err := chamele.Analyze([]string{w.SourceCode})
+		if err != nil {
+			return err
+		}
+		w.Results = files
+		return nil
+	})
+
 	sc.Step(`^I analyze it with options:$`, func(table *godog.Table) error {
 		var opts []chamele.Option
 		for _, row := range table.Rows[1:] {
