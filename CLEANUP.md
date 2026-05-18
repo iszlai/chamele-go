@@ -1,10 +1,14 @@
 # chamele-go — Cleanup & Idiomatic-Go Refactor Plan
 
-Status: **proposed** · Owner: TBD · Target: incremental, behaviour-preserving
+Status: **landed (A–H)** · Owner: arch-cleanup branch · Target: incremental, behaviour-preserving
 
 This document is the output of a top-to-bottom code review of the repository
-as it stands at `7e15b85`. It is meant to be read alongside [`PLAN.md`](./PLAN.md)
-(which tracks the *porting* roadmap) — `CLEANUP.md` is the *quality* roadmap.
+as it stood at `7e15b85`. Phases A–H landed on the `arch-cleanup` branch in
+May 2026. Items flagged "deferred" / "optional" inside individual phase
+sections remain open as follow-up PRs.
+
+It is meant to be read alongside [`PLAN.md`](./PLAN.md) (which tracks the
+*porting* roadmap) — `CLEANUP.md` is the *quality* roadmap.
 
 > Every recommendation here is justified with a file:line reference. Where a
 > change touches public API (anything outside `internal/`) the phase is
@@ -588,7 +592,11 @@ code. Plays nicer with tests.
 Phases are ordered by **ROI/risk ratio** — each one stands alone and is
 landable in a single PR.
 
-### Phase A — dead code & lint hygiene (~1 PR, ~1 day)
+> **Status (2026-05-18):** all eight phases landed on the `arch-cleanup`
+> branch. Each phase below is annotated with its commit. Follow-up work
+> still open is noted at the end of the relevant phase.
+
+### Phase A — dead code & lint hygiene (~1 PR, ~1 day) — **DONE** (`19d9d1d`)
 
 Findings: **F-1, F-2, F-3, F-18, F-19, F-20, F-25, F-30, F-11**.
 
@@ -602,7 +610,7 @@ Done when:
 - `output/tabular.go` uses the builtin `max`.
 - `BENCHMARKS.md` re-run shows no regression (smoke).
 
-### Phase B — extract shared helpers (~1 PR, ~1 day)
+### Phase B — extract shared helpers (~1 PR, ~1 day) — **DONE** (`c115a1f`)
 
 Findings: **F-7, F-8, F-29**.
 
@@ -615,7 +623,7 @@ Done when:
   `languages/`, `chamele/`, `ext/`.
 - BDD + parity green.
 
-### Phase C — metric registry (~1 PR, ~1 day)
+### Phase C — metric registry (~1 PR, ~1 day) — **DONE** (`c83d329`)
 
 Findings: **F-16, F-17, F-21**.
 
@@ -627,7 +635,7 @@ Done when:
 - Adding a new built-in metric touches **one** file, not four.
 - ND test still passes.
 
-### Phase D — extension lifecycle & helpers (~1 PR, ~2 days)
+### Phase D — extension lifecycle & helpers (~1 PR, ~2 days) — **DONE** (`aac6a69`)
 
 Findings: **F-15, F-26, F-27, F-28**.
 
@@ -647,7 +655,7 @@ Done when:
 - Running `Analyze` twice in one process gives independent metrics.
 - `cmd/chamele` invokes Printer summaries automatically.
 
-### Phase E — Engine unification (~1 PR, ~2 days)
+### Phase E — Engine unification (~1 PR, ~2 days) — **DONE** (`7c0e76f`)
 
 Findings: **F-12, F-13, F-14, F-24**.
 
@@ -659,7 +667,13 @@ Done when:
 - Three read paths collapse to one (`Engine.AnalyzeFile`).
 - Library example: "analyze with just the `mccabe` extension" is a 5-liner.
 
-### Phase F — language reader scaffolding (~2 PRs, ~3 days)
+### Phase F — language reader scaffolding (~2 PRs, ~3 days) — **PARTIAL** (`5b0b7b0`, `35809d8`)
+
+PR 1 (BraceTracker) and PR 2 (Indents) landed. F-6 (keyword-driven
+BraceKeywordReader for the six simple readers) is deferred — BraceTracker
+absorbed most of F-5's duplication, so the remaining ROI is smaller than
+originally scoped. Re-evaluate when a 12th language with the same shape
+shows up.
 
 Findings: **F-5, F-6, F-9, F-10**.
 
@@ -672,14 +686,28 @@ Done when:
 - `cloc languages/` drops by ~600 LOC.
 - Parity test green on every touched language.
 
-### Phase G — walk + I/O polish (~1 PR, ~1 day)
+### Phase G — walk + I/O polish (~1 PR, ~1 day) — **PARTIAL** (`a85d66e`)
+
+F-22 (gitignore frame trimming) landed. F-23 (md5 double-read) is
+deferred: cache-the-bytes is the right fix but it adds memory pressure
+for large repos; (dev,ino) dedup would change user-visible semantics (the
+existing parity test asserts content-based dedup matching upstream
+lizard). Left for a follow-up where we decide whether to diverge from
+lizard or accept the read cost.
 
 Findings: **F-22, F-23**.
 
 Walk hardening + single-read for dedup-then-tokenise. Low priority — only
 land after the bigger phases settle.
 
-### Phase H — CLI & BDD polish (~1 PR, ~1 day)
+### Phase H — CLI & BDD polish (~1 PR, ~1 day) — **PARTIAL** (`2e2bf35`)
+
+F-34 (parameterised Gherkin step), F-35 (no-default Lang in World.Reset),
+and F-37 (CLI exit via sentinel error, not os.Exit) landed. F-32
+(Formatter registry) and F-36 (collapse --xml/--csv/... into --format)
+are deferred — they were flagged "optional but nice" in the original
+write-up and the existing switch is small enough that adding a registry
+would expand the public API without a corresponding readability win.
 
 Findings: **F-32, F-34, F-35, F-36, F-37**.
 
