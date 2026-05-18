@@ -8,6 +8,7 @@ import (
 	"github.com/iszlai/chamele-go/internal/stringx"
 	"github.com/iszlai/chamele-go/internal/tokenizer"
 	"github.com/iszlai/chamele-go/languages"
+	"github.com/iszlai/chamele-go/languages/indented"
 )
 
 func init() { languages.Register(NewGDScriptReader()) }
@@ -44,7 +45,7 @@ func (r *GDScriptReader) GetConditions() map[string]struct{} {
 // Preprocess handles GDScript indentation-based nesting (same as Python).
 func (r *GDScriptReader) Preprocess(tokens iter.Seq[string], ctx languages.Context) iter.Seq[string] {
 	return func(yield func(string) bool) {
-		indents := &gdIndents{ctx: ctx}
+		indents := &indented.Indents{Ctx: ctx}
 		currentSpaces := 0
 		readingLeadingSpace := true
 
@@ -52,13 +53,13 @@ func (r *GDScriptReader) Preprocess(tokens iter.Seq[string], ctx languages.Conte
 			if tok != "\n" {
 				if readingLeadingSpace {
 					if stringx.IsHSpace(tok) {
-						currentSpaces += countSpaces(tok)
+						currentSpaces += indented.CountSpaces(tok)
 					} else {
 						if !strings.HasPrefix(tok, "#") {
 							name := ctx.CurrentFunctionName()
 							lname := ctx.CurrentFunctionLongName()
 							if name == "*global*" || strings.HasSuffix(lname, ")") {
-								indents.setNesting(currentSpaces, tok)
+								indents.SetNesting(currentSpaces, tok)
 							}
 						}
 						readingLeadingSpace = false
@@ -81,27 +82,7 @@ func (r *GDScriptReader) Preprocess(tokens iter.Seq[string], ctx languages.Conte
 				}
 			}
 		}
-		indents.setNesting(0, "")
-	}
-}
-
-type gdIndents struct {
-	indents []int
-	ctx     languages.Context
-}
-
-func (p *gdIndents) setNesting(spaces int, tok string) {
-	for len(p.indents) > 0 && p.indents[len(p.indents)-1] > spaces {
-		if !strings.HasPrefix(tok, ")") {
-			p.indents = p.indents[:len(p.indents)-1]
-			p.ctx.PopNesting()
-		} else {
-			break
-		}
-	}
-	if len(p.indents) == 0 || p.indents[len(p.indents)-1] < spaces {
-		p.indents = append(p.indents, spaces)
-		p.ctx.AddBareNesting()
+		indents.SetNesting(0, "")
 	}
 }
 
@@ -165,15 +146,4 @@ func (s *gdScriptMachine) stateColon(tok string) bool {
 		s.m.Next(s.stateGlobal)
 	}
 	return false
-}
-func countSpaces(tok string) int {
-	n := 0
-	for _, c := range tok {
-		if c == '\t' {
-			n += 8
-		} else {
-			n++
-		}
-	}
-	return n
 }
