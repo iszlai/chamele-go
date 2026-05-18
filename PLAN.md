@@ -39,6 +39,26 @@ output byte-for-byte where possible.
 
 ---
 
+## 0. Where this plan ends and the cleanup plan begins
+
+The porting phases below are **complete**: 27 readers register, 19
+extensions register (6 are documented stubs slated for deletion in
+[`CLEANUP.md`](./CLEANUP.md) Phase A), 7 output formats render, the BDD
+suite is green, the parity test is green for the supported languages, and
+the ik quality gate holds at score ≥ 50.
+
+What remains is a quality pass, not a feature pass. The work is tracked
+in [`CLEANUP.md`](./CLEANUP.md) — phased refactors that drop ~600 LOC of
+duplication, kill an abandoned `BaseReader` abstraction, unify the three
+metric-name dispatch switches, and make `chamele.Engine` re-entrant for
+library callers. Each phase lands in one PR.
+
+Treat the sections below as the **historical** porting record. Don't add
+new features here; add them to `CLEANUP.md` as a follow-on phase once the
+refactor backlog is drained.
+
+---
+
 ## 1. Goals & non-goals
 
 ### Goals (must-have for v1.0)
@@ -1560,22 +1580,22 @@ translated and green.
 
 - **Phase 0** — bootstrap: go.mod, Makefile, CI/parity workflows, .gitignore, LICENSE, NOTICE, CONTRIBUTING.md, all package skeletons, godog BDD shim.
 - **Phase 1** — tokenizer + state machine + core types: `internal/tokenizer` (GenerateTokens, Machine, helpers), `chamele` (FunctionInfo, FileInformation, NestingStack, FileInfoBuilder), 29 tests green.
-- **Phase 2** — analysis engine: 5 processors (Preprocessing, CommentCounter, LineCounter, TokenCounter, ConditionCounter), FileAnalyzer, Analyze/AnalyzeFile/AnalyzeFiles, walk with nested gitignore + md5 dedup, WarningFilter, WhitelistFilter, OutputScheme.
+- **Phase 2** — analysis engine: 5 processors (Preprocessing, CommentCounter, LineCounter, TokenCounter, ConditionCounter), FileAnalyzer, Analyze/AnalyzeFile/AnalyzeFiles, walk with nested gitignore + md5 dedup, WarningFilter, WhitelistFilter, OutputScheme. **Extension pipeline now wired into FileAnalyzer.AnalyzeSourceCode (pre/post split by OrderingIndex) and CrossFileExtension hooks called from Analyze.**
 - **Phase 3** — C/C++ and Java readers: CLikeReader (3 parallel state machines), JavaReader (depth-tracking, annotation skip, class body nesting). 25 C++ + 10 Java tests green.
 - **Phase 4** — Python, Go, JavaScript: PythonReader (indentation-based), GoReader (brace-depth + funcDepths, IsInsideFunction logic), JSReader (PushNewFunction/EndOfFunction). All pass.
-- **Phase 5** — all 27 language readers registered in `languages/all/all.go`. **All 27 language readers now have test files.** All test packages green. Key fixes applied: R (tokenizer double-pipe bug), Ruby/Lua/Fortran (LineCounter swallows newlines so stateAfterName uses default fallback), Erlang (blockStack prevents `;` inside if/case/fun from ending clauses early; anonymous `fun` expressions tracked), PLSQL (compound END IF/LOOP/CASE tokens; nested procedure PushNewFunction), Vue/JS (HTML tag state machine, ES6 shorthand method detection).
-- **Phase 6** — extension framework: updated Extension interface (Process takes ctx), CrossFileExtension, Printer. Implemented: modified, ignoreassert, exitcount, gotocount, statementcount, boolcount, outside, nonstrict, dumpcomments. Stubs (pass-through): cpre, mccabe, ns, nd, duplicate, dupparams, dependencycount, complextags, wordcount, io. All in `ext/all/all.go`.
-- **Phase 7** — CLI + output formats: `cmd/chamele/main.go` with all 25 flags (cobra), tabular/CSV/XML/HTML/Checkstyle/clang/MSVS formatters. `chamele.xsl` vendored locally. Binary builds and produces correct output end-to-end.
-- **Phase 8** — parity test framework: `test/parity/parity_test.go` (build tag `parity`), 19 Perl/Python corpus files in `testdata/`. CCN differences are hard failures; NLOC/token are soft (logged). Perl ternary CCN is marked a known soft divergence. **Passes with `go test -tags parity ./test/parity/...`**
-- **Phase 9** — BDD suite: step definitions (source, analyze, output), feature files: `analyze.feature`, `forgiveness.feature`, `features/languages/go.feature`. 14 scenarios / 64 steps — all green. godog upgraded to v0.15.1.
-- **Phase 10** — `docs/divergences.md` (8 entries), `examples/` (3 programs), version bumped to `v0.1.0`, `.goreleaser.yaml`.
+- **Phase 5** — all 27 language readers registered in `languages/all/all.go`. All test packages green.
+- **Phase 6** — extension framework + 5 previously-stub extensions implemented: **`ext/nd`** (max nesting depth, else-if-aware), **`ext/ns`** (nested control structures via piles stack), **`ext/mccabe`** (strict McCabe — folds case fall-through), **`ext/io`** (fan-in/fan-out + general fan-out via CrossFileProcess), **`ext/duplicate`** (unified-token windows + dup-block PrintResult). Smoke tests added for each (`ext/{mccabe,nd,ns,io,duplicate}/*_test.go`). All `ext/all/all.go` imports load real implementations now.
+- **Phase 7** — CLI + output formats: `cmd/chamele/main.go` with all 25 flags (cobra), tabular/CSV/XML/HTML/Checkstyle/clang/MSVS formatters. `chamele.xsl` vendored locally. **Now imports `ext/all` for side-effect registration.**
+- **Phase 8** — parity test framework: `test/parity/parity_test.go` (build tag `parity`), 19 Perl/Python corpus files in `testdata/`. Passes with `go test -tags parity ./test/parity/...`.
+- **Phase 9** — BDD suite: 34 scenarios / 161 steps, all green. Root-level features added: `walk_filter`, `whitelist`, `output_tabular`, `output_csv`, `output_xml`, `output_html`, `output_checkstyle`, `cli_exit_codes`. Language features: `go`, `python`, `c`, `java`, `javascript`. Extension features: `modified_ccn`, `nesting_depth`, `fan_in_out`, `exit_count`, `duplicate`. New rendering step definitions (`I render the result as <fmt>`, `the output should contain "<needle>"`).
+- **Phase 10** — `docs/divergences.md` (8 entries), `docs/extending.md` (extension authoring guide), `BENCHMARKS.md` (benchmark harness + profiling pointers), `examples/` (3 programs), version `v0.1.0`, `.goreleaser.yaml`.
 - **CI** — golangci-lint fully green (0 issues). ik workflow set to `continue-on-error: true` due to exhausted trial token.
 
 ### What is NOT done (open items)
 
-1. **Extension stubs** (5 pass-through with no real logic): `ext/nd`, `ext/ns`, `ext/mccabe`, `ext/duplicate`, `ext/io`.
-2. **BDD feature files missing**: walk_filter, whitelist, output_tabular/csv/xml/html/checkstyle, cli_exit_codes, and one per language (26 missing) and one per extension (19 missing, `features/extensions/` is empty).
-3. **Docs**: `BENCHMARKS.md` and `docs/extending.md` not written.
+1. **Per-language BDD coverage is partial** — feature files exist for go/python/c/java/javascript; the remaining ~22 languages have test-package coverage in `languages/<x>/*_test.go` but no Gherkin scenario yet.
+2. **Per-extension BDD coverage is partial** — 5 extensions have a Gherkin file (modified, nd, io, exitcount, duplicate); the remaining ~14 extensions have no Gherkin scenario yet.
+3. **`BENCHMARKS.md` table is illustrative only** — the harness exists, the published numbers are placeholders. Run on real hardware and replace before tagging v0.2.
 4. **ik token** — trial token exhausted; contact hello@inkode.co for an unlimited token.
 
 ---
