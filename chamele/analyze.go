@@ -79,5 +79,14 @@ func analyzeFiles(paths []string, opts Options) ([]FileInformation, error) {
 	if err := g.Wait(); err != nil {
 		return nil, err
 	}
+
+	// Cross-file extensions (fan-in/fan-out, duplicate detection) run
+	// after every file has been analysed, on the main goroutine, so they
+	// see deterministic order.
+	for _, ext := range RegisteredExtensions() {
+		if cfe, ok := ext.(CrossFileExtension); ok {
+			results = cfe.CrossFileProcess(results)
+		}
+	}
 	return results, nil
 }

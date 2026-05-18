@@ -12,19 +12,19 @@ import (
 // returns the resulting FileInformation.
 type FileAnalyzer struct {
 	processors []Processor
+	exts       []Extension
 }
 
-// NewFileAnalyzer creates an analyzer with the standard processor pipeline.
+// NewFileAnalyzer creates an analyzer with the standard processor pipeline
+// and every globally registered extension.
 func NewFileAnalyzer() *FileAnalyzer {
-	return &FileAnalyzer{processors: DefaultProcessors()}
+	return NewFileAnalyzerWithExts(RegisteredExtensions())
 }
 
 // NewFileAnalyzerWithExts creates an analyzer whose pipeline includes the
 // given extensions inserted at their declared ordering index.
 func NewFileAnalyzerWithExts(exts []Extension) *FileAnalyzer {
-	procs := DefaultProcessors()
-	_ = exts // extension integration wired in Phase 6
-	return &FileAnalyzer{processors: procs}
+	return &FileAnalyzer{processors: DefaultProcessors(), exts: exts}
 }
 
 // AnalyzeFile reads path from disk, selects a reader, and analyses it.
@@ -47,8 +47,24 @@ func (a *FileAnalyzer) AnalyzeSourceCode(filename string, src []byte, r language
 	ctx := NewFileInfoBuilder(filename)
 	tokens := r.Tokenize(src)
 
+	// Split extensions by ordering index: negative → before built-ins, 0+ → after.
+	var pre, post []Extension
+	for _, e := range a.exts {
+		if e.OrderingIndex() < 0 {
+			pre = append(pre, e)
+		} else {
+			post = append(post, e)
+		}
+	}
+
+	for _, e := range pre {
+		tokens = e.Process(tokens, ctx)
+	}
 	for _, proc := range a.processors {
 		tokens = proc(tokens, ctx, r)
+	}
+	for _, e := range post {
+		tokens = e.Process(tokens, ctx)
 	}
 
 	// Feed processed tokens into the reader's parallel state machines (if any).
